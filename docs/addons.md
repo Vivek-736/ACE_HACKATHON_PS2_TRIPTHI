@@ -129,7 +129,7 @@ Use appropriate HTTP status codes. Do not leak stack traces, provider secrets or
 
 # Phase 0 — Repository foundation and design system
 
-**Status:** ⬜ Not started
+**Status:** 🟡 In progress — partial. Files written for the Drizzle config, `users` schema, Neon client and `.env.example`. NOT compiled, linted, run, connected or migrated. Typecheck, lint, build, app start, Neon connection and migration checks are NOT verified. See `memory.md`.
 
 ## Objective
 Create a stable Next.js project foundation, design-token system, environment validation, database connectivity and clean module boundaries before implementing product features.
@@ -252,7 +252,19 @@ Update `scope.md` Phase 0 to complete and root `memory.md` with scaffold, script
 
 # Phase 1 — Authentication, onboarding and role dashboards
 
-**Status:** ⬜ Not started
+**Status:** 🟡 In progress — partial
+
+**Built (files only; NOT compiled, linted or run):** `lib/auth/current-user.ts`; `app/api/users/sync/route.ts`; `components/providers/user-sync-provider.tsx`; `app/layout.tsx` (ClerkProvider and UserSyncProvider); `app/(auth)/sign-in` and `app/(auth)/sign-up`; `app/api/onboarding/role/route.ts`; `app/onboarding/page.tsx`; `components/onboarding/onboarding-form.tsx`.
+
+**Not built:** role dashboards for donor, receiver, volunteer and admin. A successful onboarding redirects to `/dashboard/<role>`, which has no page yet and returns 404.
+
+**Decisions**
+- Zod-only forms (user decision). React Hook Form and `@hookform/resolvers` are not installed; onboarding uses plain React state with Zod validation. Spec wording that names React Hook Form remains open.
+- Role dashboards deferred (user decision).
+- Admin is never self-assigned: the role API accepts only donor, receiver and volunteer, and the sync route never writes `role`.
+- One active role per account; role changes are blocked after onboarding (409).
+
+Acceptance criteria below remain unticked: none is verified, and Phase 1 is not complete.
 
 ## Objective
 Allow donors, receivers and volunteers to register, complete role-specific onboarding and access only their own dashboard. Add an admin role for internal demo operations.

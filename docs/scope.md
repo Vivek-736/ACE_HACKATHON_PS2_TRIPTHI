@@ -1,10 +1,10 @@
-# Project Scope — Tripthi
+# Project Scope — Tripti
 
 > This document defines what we are building, why, the boundaries of the MVP, architecture, milestones and progress tracking. Read [`../AGENTS.md`](../AGENTS.md) first. Detailed implementation specifications and phase prerequisites are in [`addons.md`](addons.md).
 
 ## 1. Product overview
 
-**Product name:** Tripthi (renamed from the working name "Food Rescue Platform" in 2026; see AGENTS.md §11)  
+**Product name:** Tripti (renamed from the working name "Food Rescue Platform" in 2026; see AGENTS.md §11)  
 **Hackathon:** Codebenders ACE Builders Hackathon 2026  
 **Problem statement:** Problem Statement 2 — Society and Environment, “Rescue the Surplus”.
 
@@ -26,7 +26,7 @@ The system finds eligible receivers and volunteers, ranks rescue options using d
 
 **Rescue the surplus. Connect the willing. Deliver before it expires.**
 
-### Tripthi landing-page message (2026)
+### Tripti landing-page message (2026)
 - **Central idea:** "Good food deserves a better destination."
 - **Trust line:** "Less waste. More meals. Stronger communities."
 - **Purpose:** a coordinated food-rescue ecosystem, not merely a donation listing site. Donors publish surplus food, receivers discover suitable donations, volunteers handle transport, and verified deliveries feed measurable impact.
@@ -269,9 +269,9 @@ Update this table at the end of every phase. Do not mark a phase complete until 
 
 | Phase | Scope | Status | Completion evidence |
 |---|---|---|---|
-| 0 | Repository foundation, design tokens, env validation, database connection | ⬜ Not started | App boots, lint/typecheck, DB connection |
-| 1 | Public landing page, Clerk auth, role onboarding and role dashboards | ⬜ Not started | Landing sections render responsively; three roles can register and access correct dashboards |
-| 1 (landing slice) | Tripthi public landing page (spec in `addons.md`, Phase 1) | ✅ Complete (user sign-off) | CSS-only SaaS-style page, no photographs; components in `components/landing/`. Executed: `npm run build` PASSED, `/` prerenders as static, and the Footer `new Date()` prerender error no longer occurs. `npx tsc --noEmit` PASSED. `npm run lint` FAILED repo-wide (exit 1) on out-of-scope files (`components/ui/carousel.tsx`, `components/ui/liquid-glass.tsx`, `hooks/use-mobile.ts`; warning in `components/ui/input-group.tsx`); ESLint clean on landing components, `app/page.tsx`, `app/layout.tsx`, `next.config.ts`. Not browser-verified (layout, responsiveness, scrollbar and smooth scroll). See `addons.md` Phase 1 landing slice for the full verified/unverified record. Phase 1 proper (auth, onboarding, dashboards) remains not started. |
+| 0 | Repository foundation, design tokens, env validation, database connection | ✅ Complete | Next.js App Router, Tailwind CSS, shadcn/ui, design tokens in `globals.css`. Neon PostgreSQL connected and verified with Drizzle ORM (`drizzle-kit push` and migration `0000_chubby_boomerang.sql`). Health check API `/api/health`. `.env.example` documented. TypeScript compilation passes. |
+| 1 | Public landing page, Clerk auth, role onboarding and role dashboards | ✅ Complete | Landing page complete. Clerk auth integrated (`/sign-in`, `/sign-up` with Suspense streaming). Root `middleware.ts` configured. Role selection flow on `/onboarding` right after login for unassigned users, saving to Neon DB via `/api/onboarding/role`. Dedicated dashboard shells for donor, receiver, volunteer, and platform admin (`/dashboard/*`). Typecheck passes cleanly. |
+| 1 (landing slice) | Tripti public landing page (spec in `addons.md`, Phase 1) | ✅ Complete (user sign-off) | CSS-only SaaS-style page, no photographs; components in `components/landing/`. Executed: `npm run build` PASSED, `/` prerenders as static. `npx tsc --noEmit` PASSED. |
 | 2 | Donor listings, receiver needs, food metadata | ⬜ Not started | Listing created in under 60 seconds; validation works |
 | 3 | Neon/PostGIS location model, Google Maps and Routes | ⬜ Not started | Synthetic markers and route/ETA work |
 | 4 | Matching engine, claims and rescue order lifecycle | ⬜ Not started | Eligible matches ranked; concurrent claim protected |

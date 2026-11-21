@@ -140,7 +140,7 @@ export default function DashboardPreview() {
   return (
     <section className="max-w-6xl mx-auto px-4 sm:px-6 pb-20 min-w-0">
       <p className="mb-3 text-center text-xs text-muted-foreground">
-        Preview of the Tripthi dashboard · fictional demo data
+        Preview of the Tripti dashboard · fictional demo data
       </p>
 
       <div
@@ -156,7 +156,7 @@ export default function DashboardPreview() {
           </div>
           <div className="flex-1 flex justify-center min-w-0">
             <span className="rounded-md bg-background border border-border px-3 py-1 text-xs text-muted-foreground truncate">
-              tripthi.app/dashboard
+              Tripti.app/dashboard
             </span>
           </div>
           <div className="flex items-center gap-1 text-xs text-muted-foreground">
@@ -171,7 +171,7 @@ export default function DashboardPreview() {
           <aside className="border-b border-border p-4 lg:w-56 lg:shrink-0 lg:border-b-0 lg:border-r">
             <div className="flex items-center gap-2 mb-3 lg:mb-6">
               <Leaf className="size-4 text-primary" />
-              <span className="font-semibold text-sm text-foreground">Tripthi</span>
+              <span className="font-semibold text-sm text-foreground">Tripti</span>
             </div>
             <nav className="flex flex-wrap gap-2 lg:flex-col lg:gap-1">
               {navItems.map((item) => {

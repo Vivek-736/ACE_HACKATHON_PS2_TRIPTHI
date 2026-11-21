@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
 import { Roboto_Condensed } from "next/font/google";
+import { Suspense } from "react";
+import { ClerkProvider } from "@clerk/nextjs";
+import { UserSyncProvider } from "@/components/providers/user-sync-provider";
 import "./globals.css";
 
 const robotoCondensed = Roboto_Condensed({
@@ -9,8 +12,9 @@ const robotoCondensed = Roboto_Condensed({
   display: "swap",
 });
 
-const siteTitle = "Tripthi - Rescue Food. Share Hope.";
-const siteDescription = "Tripthi connects food donors, NGOs, and volunteers to rescue surplus food and deliver it to communities that need it.";
+const siteTitle = "Tripti - Rescue Food. Share Hope.";
+const siteDescription =
+  "Tripti connects food donors, NGOs, and volunteers to rescue surplus food and deliver it to communities that need it.";
 
 export const metadata: Metadata = {
   title: siteTitle,
@@ -36,7 +40,13 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       className={`${robotoCondensed.className} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <Suspense fallback={null}>
+          <ClerkProvider>
+            <UserSyncProvider>{children}</UserSyncProvider>
+          </ClerkProvider>
+        </Suspense>
+      </body>
     </html>
   );
 }

@@ -1,11 +1,11 @@
-# AGENTS.md — Tripthi (formerly Food Rescue Platform)
+# AGENTS.md — Tripti (formerly Food Rescue Platform)
 
 > **Purpose:** This is the project-wide operating contract for every AI coding agent and human contributor.
 > Read this file before changing code. The detailed implementation plan lives in [`docs/scope.md`](docs/scope.md), and the feature-by-feature specifications, API requirements, acceptance criteria, and agent skill guidance live in [`docs/addons.md`](docs/addons.md).
 
 ## 1. Product identity
 
-**Product name:** Tripthi
+**Product name:** Tripti
 **Former working name:** Food Rescue Platform (renamed 2026; see section 11)  
 **Hackathon:** Codebenders ACE Builders Hackathon 2026  
 **Problem statement:** Problem Statement 2 — Society and Environment, “Rescue the Surplus”.
@@ -34,7 +34,7 @@ The platform is not merely a map or a donation listing board. Its central value 
 
 **Rescue the surplus. Connect the willing. Deliver before it expires.**
 
-### Tripthi positioning (2026)
+### Tripti positioning (2026)
 
 - **Central idea:** "Good food deserves a better destination."
 - **Trust line:** "Less waste. More meals. Stronger communities."
@@ -215,7 +215,7 @@ Feature modules should own their schemas, types, service logic and UI where prac
 - **Typography (2026):** Geist and Geist Mono are loaded with `next/font/google` in `app/layout.tsx` (variables `--font-geist-sans` and `--font-geist-mono`). Do not add further font families without recording a decision.
 
 ### Brand and landing-page assets (2026)
-- `public/logo.svg` (Tripthi emblem) is the logo; `public/favicon.svg` is the favicon.
+- `public/logo.svg` (Tripti emblem) is the logo; `public/favicon.svg` is the favicon.
 - Imagery must be documentary-style, royalty-free photography from Unsplash or Pexels: restaurants packing surplus food, volunteers packing or transporting it, community kitchens, NGO teams, fresh food and realistic handoffs.
 - Do not use Drift assets, AI-generated filler, or imagery that implies poverty or disrespects recipients.
 - Configure `next/image` `remotePatterns` for each chosen host and record the source and licence of every image.
@@ -317,10 +317,10 @@ When changing a major decision (database, auth, client-refresh strategy, map pro
 
 ### Decision entries (2026)
 
-- **2026 — Product renamed to Tripthi.** Previous working name: "Food Rescue Platform". Reason: brand identity for the public landing page and launch. Trade-off: the working name remains in history and in any repository or package identifiers this record does not change. Updated in this change: `AGENTS.md`, `docs/scope.md`, `docs/addons.md` (Phase 1 landing-page slice). Pending: record in `memory.md` at its next update. This change did not edit `memory.md`.
-- **2026 — Landing-page spec recorded (implementation pending).** Central idea, trust line, eight-section order, metadata, imagery rules and interaction rules are recorded in `docs/addons.md` (Phase 1, public landing page slice). Status: in progress, not complete. Trade-off: the hero uses one full-width photo with a dark overlay rather than a composed journey collage. The rescue journey is shown in the How Tripthi Works section instead. This supersedes the earlier Phase 1 wording on the hero, the Discover/About/Impact navigation and the Discover section.
+- **2026 — Product renamed to Tripti.** Previous working name: "Food Rescue Platform". Reason: brand identity for the public landing page and launch. Trade-off: the working name remains in history and in any repository or package identifiers this record does not change. Updated in this change: `AGENTS.md`, `docs/scope.md`, `docs/addons.md` (Phase 1 landing-page slice). Pending: record in `memory.md` at its next update. This change did not edit `memory.md`.
+- **2026 — Landing-page spec recorded (implementation pending).** Central idea, trust line, eight-section order, metadata, imagery rules and interaction rules are recorded in `docs/addons.md` (Phase 1, public landing page slice). Status: in progress, not complete. Trade-off: the hero uses one full-width photo with a dark overlay rather than a composed journey collage. The rescue journey is shown in the How Tripti Works section instead. This supersedes the earlier Phase 1 wording on the hero, the Discover/About/Impact navigation and the Discover section.
 - **2026 — Repo-root layout deviation.** Spec and this document write `src/app/globals.css`, `src/...` feature folders and `src/app` route groups. The actual layout is `app/globals.css`, `app/layout.tsx`, `components/ui`, `public/`. Reason: the scaffold already uses this layout, and moving it adds churn with no product benefit. Consequence: `src/` paths in this document are not yet reconciled. Follow-up: before Phase 1 auth routes are added, either move the scaffold to `src/` or update the paths in this document. Not changed silently.
-- **2026 — Metadata and footer scope.** Metadata: title "Tripthi — Rescue Food. Share Hope.", OpenGraph type `website`, Twitter card, icon from `public/favicon.svg`. `metadataBase` is omitted because no production domain is known; add it when the domain is set via `NEXT_PUBLIC_APP_URL`. Footer: Privacy and Terms links are omitted until those routes exist. No social links are shown unless configured.
+- **2026 — Metadata and footer scope.** Metadata: title "Tripti — Rescue Food. Share Hope.", OpenGraph type `website`, Twitter card, icon from `public/favicon.svg`. `metadataBase` is omitted because no production domain is known; add it when the domain is set via `NEXT_PUBLIC_APP_URL`. Footer: Privacy and Terms links are omitted until those routes exist. No social links are shown unless configured.
 - **2026 — Image hosts.** Unsplash or Pexels are the sources. The exact `remotePatterns` hosts are not chosen yet and must be recorded when images are selected.
 
 **Do not silently change the stack or product scope.**

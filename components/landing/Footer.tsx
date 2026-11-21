@@ -28,7 +28,7 @@ export default async function Footer() {
           <div className="flex flex-col gap-3">
             <div className="flex items-center gap-2">
               <Image src="/logo.svg" alt="" width={28} height={28} />
-              <span className="text-base font-semibold text-foreground">Tripthi</span>
+              <span className="text-base font-semibold text-foreground">Tripti</span>
             </div>
             <p className="max-w-xs text-sm text-muted-foreground">
               Connecting surplus food with the communities that need.
@@ -45,7 +45,7 @@ export default async function Footer() {
         </div>
 
         <p className="mt-10 border-t border-border pt-6 text-xs text-muted-foreground">
-          © {year} Tripthi. All rights reserved.
+          © {year} Tripti. All rights reserved.
         </p>
       </div>
     </footer>
