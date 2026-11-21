@@ -22,7 +22,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { HYDERABAD_DEMO_LOCATIONS } from "@/lib/constants/demo-locations";
 
 interface PostFoodRequestDialogProps {
-  onSuccess: () => void;
+  onSuccess?: () => void;
 }
 
 export function PostFoodRequestDialog({ onSuccess }: PostFoodRequestDialogProps) {
@@ -81,7 +81,7 @@ export function PostFoodRequestDialog({ onSuccess }: PostFoodRequestDialogProps)
       }
 
       setOpen(false);
-      onSuccess();
+      onSuccess?.();
     } catch (err: unknown) {
       setErrorMsg(
         err instanceof Error ? err.message : "Error creating food request"

@@ -57,3 +57,6 @@ export const HYDERABAD_DEMO_LOCATIONS: DemoLocation[] = [
     longitude: 78.5013,
   },
 ];
+
+export const DEMO_LOCATIONS = HYDERABAD_DEMO_LOCATIONS;
+

@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { eq } from "drizzle-orm";
 import {
   Award,
   CheckCircle,
@@ -9,9 +10,20 @@ import {
   MapPin,
   Navigation,
   ShieldCheck,
+  Utensils,
+  Layers,
 } from "lucide-react";
 import { getCurrentUser, dashboardPathFor } from "@/lib/auth/current-user";
+import { db } from "@/lib/db";
+import { volunteerProfiles } from "@/db/schema/volunteers";
+import { foodListings } from "@/db/schema/listings";
+import { foodRequests } from "@/db/schema/requests";
 import { Spinner } from "@/components/ui/spinner";
+import { VolunteerLocationWidget } from "@/components/volunteer/volunteer-location-widget";
+import { MapDualView } from "@/components/maps/map-dual-view";
+import { calculateHaversineDistanceKm } from "@/lib/maps/haversine";
+import { MapMarker } from "@/lib/maps/types";
+import { ROLE_MARKER_COLORS } from "@/lib/maps/map-styles";
 
 async function VolunteerDashboardContent() {
   const user = await getCurrentUser();
@@ -30,8 +42,111 @@ async function VolunteerDashboardContent() {
 
   const volunteerName = user.displayName || user.firstName || "Volunteer Courier";
 
+  // Fetch or initialize volunteer profile
+  let [profile] = await db
+    .select()
+    .from(volunteerProfiles)
+    .where(eq(volunteerProfiles.userId, user.id))
+    .limit(1);
+
+  if (!profile) {
+    [profile] = await db
+      .insert(volunteerProfiles)
+      .values({
+        userId: user.id,
+        availabilityStatus: "available",
+        preferredRadiusKm: 10,
+        transportMode: "motorcycle",
+        locationName: "Cyber Pearl, Madhapur",
+        latitude: "17.4483",
+        longitude: "78.3815",
+        rescueCredits: 120,
+        totalDeliveries: 8,
+        onTimeRate: "100.00",
+      })
+      .returning();
+  }
+
+  const volLat = parseFloat(profile.latitude);
+  const volLng = parseFloat(profile.longitude);
+
+  // Fetch active listings and receiver needs to build map markers
+  const activeListings = await db
+    .select()
+    .from(foodListings)
+    .where(eq(foodListings.status, "available"));
+
+  const activeRequests = await db
+    .select()
+    .from(foodRequests)
+    .where(eq(foodRequests.status, "active"));
+
+  const markers: MapMarker[] = [];
+
+  // Add Donor Markers
+  activeListings.forEach((listing) => {
+    const lat = parseFloat(listing.latitude);
+    const lng = parseFloat(listing.longitude);
+    const distance = calculateHaversineDistanceKm(volLat, volLng, lat, lng);
+
+    markers.push({
+      id: `donor-${listing.id}`,
+      role: "donor",
+      title: listing.title,
+      subtitle: listing.organisationName,
+      status: listing.status,
+      latitude: lat,
+      longitude: lng,
+      locationName: listing.locationName,
+      portions: listing.remainingPortions,
+      dietType: listing.dietType,
+      foodCategory: listing.foodCategory,
+      distanceKm: distance,
+      color: ROLE_MARKER_COLORS.donor.bg,
+    });
+  });
+
+  // Add Receiver Markers
+  activeRequests.forEach((req) => {
+    const lat = parseFloat(req.latitude);
+    const lng = parseFloat(req.longitude);
+    const distance = calculateHaversineDistanceKm(volLat, volLng, lat, lng);
+
+    markers.push({
+      id: `receiver-${req.id}`,
+      role: "receiver",
+      title: req.title,
+      subtitle: req.organisationName,
+      status: req.status,
+      latitude: lat,
+      longitude: lng,
+      locationName: req.locationName,
+      portions: req.requestedPortions,
+      dietType: req.dietaryConstraints || "Any",
+      distanceKm: distance,
+      color: ROLE_MARKER_COLORS.receiver.bg,
+    });
+  });
+
+  // Add current volunteer marker
+  markers.push({
+    id: `volunteer-${profile.id}`,
+    role: "volunteer",
+    title: `You (${volunteerName})`,
+    subtitle: `Mode: ${profile.transportMode.toUpperCase()}`,
+    status: profile.availabilityStatus,
+    latitude: volLat,
+    longitude: volLng,
+    locationName: profile.locationName,
+    distanceKm: 0,
+    color:
+      profile.availabilityStatus === "available"
+        ? ROLE_MARKER_COLORS.volunteer.available.bg
+        : ROLE_MARKER_COLORS.volunteer.offline.bg,
+  });
+
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* Console Welcome & Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
@@ -42,21 +157,28 @@ async function VolunteerDashboardContent() {
             {volunteerName}
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Pick up surplus food and deliver it to nearby shelters before expiry.
+            Pick up surplus food and deliver it to nearby community receivers before expiry.
           </p>
         </div>
 
-        {/* Availability Status Badge */}
-        <div className="flex items-center gap-2">
-          <span className="relative flex size-2.5">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75" />
-            <span className="relative inline-flex size-2.5 rounded-full bg-primary" />
-          </span>
-          <span className="text-sm font-semibold text-foreground">
-            Online &bull; Ready for Rescues
-          </span>
+        {/* Live Staging Indicator */}
+        <div className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-xs">
+          <MapPin className="h-4 w-4 text-primary" />
+          <div>
+            <div className="font-semibold text-foreground">{profile.locationName}</div>
+            <div className="text-[11px] text-muted-foreground">
+              {profile.transportMode.toUpperCase()} &bull; {profile.preferredRadiusKm} km Radius
+            </div>
+          </div>
         </div>
       </div>
+
+      {/* Dispatch Staging & Duty Status Control */}
+      <VolunteerLocationWidget
+        initialLocationName={profile.locationName}
+        initialAvailability={profile.availabilityStatus}
+        initialTransportMode={profile.transportMode}
+      />
 
       {/* 4 Primary Metric Cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -66,36 +188,36 @@ async function VolunteerDashboardContent() {
             <CheckCircle className="size-4 text-primary" />
           </div>
           <div className="mt-3">
-            <div className="text-2xl font-bold text-foreground">24 Missions</div>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Delivered safely on time
-            </p>
+            <div className="text-2xl font-bold text-foreground">
+              {profile.totalDeliveries} Missions
+            </div>
+            <p className="mt-1 text-xs text-muted-foreground">Delivered safely on time</p>
           </div>
         </div>
 
         <div className="rounded-xl border border-border bg-card p-5">
           <div className="flex items-center justify-between text-muted-foreground">
             <span className="text-xs font-medium">Rescue Credits</span>
-            <Award className="size-4 text-accent-foreground" />
+            <Award className="size-4 text-amber-600" />
           </div>
           <div className="mt-3">
-            <div className="text-2xl font-bold text-foreground">360 Credits</div>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Non-cash community recognition
-            </p>
+            <div className="text-2xl font-bold text-foreground">
+              {profile.rescueCredits} Credits
+            </div>
+            <p className="mt-1 text-xs text-muted-foreground">Non-cash recognition points</p>
           </div>
         </div>
 
         <div className="rounded-xl border border-border bg-card p-5">
           <div className="flex items-center justify-between text-muted-foreground">
-            <span className="text-xs font-medium">Distance Traveled</span>
+            <span className="text-xs font-medium">Active Zone Scope</span>
             <Navigation className="size-4 text-secondary-foreground" />
           </div>
           <div className="mt-3">
-            <div className="text-2xl font-bold text-foreground">86.4 km</div>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Total rescue transit
-            </p>
+            <div className="text-2xl font-bold text-foreground">
+              {profile.preferredRadiusKm} km
+            </div>
+            <p className="mt-1 text-xs text-muted-foreground">Dispatch search radius</p>
           </div>
         </div>
 
@@ -105,57 +227,28 @@ async function VolunteerDashboardContent() {
             <ShieldCheck className="size-4 text-primary" />
           </div>
           <div className="mt-3">
-            <div className="text-2xl font-bold text-foreground">98.5%</div>
-            <p className="mt-1 text-xs text-muted-foreground">
-              On-time verification rate
-            </p>
+            <div className="text-2xl font-bold text-foreground">
+              {profile.onTimeRate}%
+            </div>
+            <p className="mt-1 text-xs text-muted-foreground">Verified on-time handoffs</p>
           </div>
         </div>
       </div>
 
-      {/* Available Rescues Queue Preview */}
-      <div className="rounded-xl border border-border bg-card">
-        <div className="border-b border-border p-5">
-          <h2 className="text-base font-semibold text-foreground">
-            Available Rescue Opportunities Nearby
-          </h2>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Ranked by distance, expiration urgency, and receiver capacity.
-          </p>
-        </div>
+      {/* Interactive Map & Spatial Radar Dual View */}
+      <MapDualView
+        markers={markers}
+        center={{ lat: volLat, lng: volLng }}
+        currentLocationName={profile.locationName}
+        title="Live Rescue Dispatch Radar & Nearby Missions"
+        description="Select any nearby surplus food pin to preview the delivery route, travel distance, and ETA."
+      />
 
-        <div className="divide-y divide-border">
-          <div className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
-            <div className="space-y-1">
-              <div className="flex items-center gap-2">
-                <span className="font-semibold text-foreground">
-                  Spice Kitchen Canteen &rarr; Care Foundation Shelter
-                </span>
-                <span className="rounded-full bg-accent/20 px-2 py-0.5 text-xs font-semibold text-accent-foreground">
-                  Urgent &bull; 45m left
-                </span>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                30 Meals &bull; Pickup: Banjara Hills (1.8 km) &bull; Drop: Jubilee
-                Hills (3.2 km)
-              </p>
-            </div>
-
-            <button
-              type="button"
-              className="inline-flex h-9 items-center justify-center rounded-lg bg-primary px-3 text-xs font-semibold text-primary-foreground shadow-xs transition-colors hover:bg-primary/90"
-            >
-              Accept Rescue Assignment
-            </button>
-          </div>
-        </div>
-
-        <div className="border-t border-border bg-muted/20 p-4 text-xs text-muted-foreground">
-          <span>
-            * Rescue Credits are non-cash recognition points. Compensation is funded
-            by donors and CSR sponsors, never deducted from volunteers.
-          </span>
-        </div>
+      <div className="rounded-xl border border-border bg-muted/20 p-4 text-xs text-muted-foreground">
+        <span>
+          * Rescue Credits are non-cash community recognition points. Delivery compensation is funded
+          by donors and CSR sponsors, never charged to volunteers.
+        </span>
       </div>
     </div>
   );

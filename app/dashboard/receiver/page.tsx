@@ -13,13 +13,23 @@ import {
 } from "lucide-react";
 import { getCurrentUser, dashboardPathFor } from "@/lib/auth/current-user";
 import { db } from "@/lib/db";
-import { receiverProfiles, foodRequests, listingReservations } from "@/db/schema/requests";
+import {
+  receiverProfiles,
+  foodRequests,
+  listingReservations,
+} from "@/db/schema/requests";
+import { foodListings } from "@/db/schema/listings";
+import { volunteerProfiles } from "@/db/schema/volunteers";
 import { buttonVariants } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { CapacityManager } from "@/components/receiver/capacity-manager";
 import { DiscoverFoodView } from "@/components/receiver/discover-food-view";
 import { PostFoodRequestDialog } from "@/components/receiver/post-food-request-dialog";
 import { ReceiverRequestsTable } from "@/components/receiver/receiver-requests-table";
+import { MapDualView } from "@/components/maps/map-dual-view";
+import { calculateHaversineDistanceKm } from "@/lib/maps/haversine";
+import { MapMarker } from "@/lib/maps/types";
+import { ROLE_MARKER_COLORS } from "@/lib/maps/map-styles";
 import { FOOD_SAFETY_DISCLAIMER } from "@/lib/constants/food-safety";
 
 async function ReceiverDashboardContent() {
@@ -62,20 +72,92 @@ async function ReceiverDashboardContent() {
     profile = created;
   }
 
-  // Count reservations & requests
+  // Fetch reservations count
   const reservations = await db
     .select()
     .from(listingReservations)
     .where(eq(listingReservations.receiverId, user.id));
 
-  const totalPortionsReserved = reservations.reduce(
+  const totalPortionsClaimed = reservations.reduce(
     (acc, cur) => acc + cur.portionsReserved,
     0
   );
 
+  // Receiver reference coordinates (DLF Cybercity, Gachibowli)
+  const receiverLat = 17.4435;
+  const receiverLng = 78.3571;
+
+  // Fetch active listings and volunteers for the map
+  const activeListings = await db
+    .select()
+    .from(foodListings)
+    .where(eq(foodListings.status, "available"));
+
+  const availableVolunteers = await db
+    .select()
+    .from(volunteerProfiles)
+    .where(eq(volunteerProfiles.availabilityStatus, "available"));
+
+  const mapMarkers: MapMarker[] = [];
+
+  activeListings.forEach((listing) => {
+    const lat = parseFloat(listing.latitude);
+    const lng = parseFloat(listing.longitude);
+    const distance = calculateHaversineDistanceKm(receiverLat, receiverLng, lat, lng);
+
+    mapMarkers.push({
+      id: `donor-${listing.id}`,
+      role: "donor",
+      title: listing.title,
+      subtitle: listing.organisationName,
+      status: listing.status,
+      latitude: lat,
+      longitude: lng,
+      locationName: listing.locationName,
+      portions: listing.remainingPortions,
+      dietType: listing.dietType,
+      foodCategory: listing.foodCategory,
+      distanceKm: distance,
+      color: ROLE_MARKER_COLORS.donor.bg,
+    });
+  });
+
+  availableVolunteers.forEach((vol) => {
+    const lat = parseFloat(vol.latitude);
+    const lng = parseFloat(vol.longitude);
+    const distance = calculateHaversineDistanceKm(receiverLat, receiverLng, lat, lng);
+
+    mapMarkers.push({
+      id: `volunteer-${vol.id}`,
+      role: "volunteer",
+      title: "Rescue Courier",
+      subtitle: `Mode: ${vol.transportMode.toUpperCase()}`,
+      status: vol.availabilityStatus,
+      latitude: lat,
+      longitude: lng,
+      locationName: vol.locationName,
+      distanceKm: distance,
+      color: ROLE_MARKER_COLORS.volunteer.available.bg,
+    });
+  });
+
+  // Current receiver pin
+  mapMarkers.push({
+    id: `receiver-current`,
+    role: "receiver",
+    title: `Your Kitchen (${orgName})`,
+    subtitle: `${profile.currentCapacityPortions} Portions Capacity`,
+    status: "active",
+    latitude: receiverLat,
+    longitude: receiverLng,
+    locationName: "Gachibowli Center",
+    distanceKm: 0,
+    color: ROLE_MARKER_COLORS.receiver.bg,
+  });
+
   return (
     <div className="space-y-8">
-      {/* Console Welcome & Header */}
+      {/* Console Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <div className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-secondary-foreground">
@@ -85,36 +167,47 @@ async function ReceiverDashboardContent() {
             {orgName}
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Discover matched food donations and coordinate incoming community distributions.
+            Request, discover, and coordinate food deliveries for your community.
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
-          <PostFoodRequestDialog onSuccess={() => {}} />
+        {/* Action Buttons */}
+        <div className="flex items-center gap-2">
+          <PostFoodRequestDialog />
+          <Link
+            href="#discover"
+            className={buttonVariants({
+              variant: "outline",
+              className: "gap-1.5",
+            })}
+          >
+            <Search className="size-4" />
+            <span>Discover Food</span>
+          </Link>
         </div>
       </div>
 
-      {/* 4 Primary Metric Cards */}
+      {/* Primary Metric Cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div className="rounded-xl border border-border bg-card p-5">
           <div className="flex items-center justify-between text-muted-foreground">
             <span className="text-xs font-medium">Meals Reserved</span>
-            <HeartHandshake className="size-4 text-primary" />
+            <Users className="size-4 text-primary" />
           </div>
           <div className="mt-3">
             <div className="text-2xl font-bold text-foreground">
-              {totalPortionsReserved} Portions
+              {totalPortionsClaimed} Portions
             </div>
             <p className="mt-1 text-xs text-muted-foreground">
-              Across {reservations.length} rescue claims
+              Surplus allocated to your center
             </p>
           </div>
         </div>
 
         <div className="rounded-xl border border-border bg-card p-5">
           <div className="flex items-center justify-between text-muted-foreground">
-            <span className="text-xs font-medium">Available Capacity</span>
-            <Users className="size-4 text-secondary-foreground" />
+            <span className="text-xs font-medium">Current Capacity</span>
+            <HeartHandshake className="size-4 text-secondary-foreground" />
           </div>
           <div className="mt-3">
             <div className="text-2xl font-bold text-foreground">
@@ -133,25 +226,25 @@ async function ReceiverDashboardContent() {
           </div>
           <div className="mt-3">
             <div className="text-2xl font-bold text-foreground">
-              {reservations.filter((r) => r.status === "confirmed").length} Pending
+              {reservations.filter((r) => r.status === "confirmed").length} Active
             </div>
             <p className="mt-1 text-xs text-muted-foreground">
-              Awaiting volunteer coordination
+              In rescue coordination
             </p>
           </div>
         </div>
 
         <div className="rounded-xl border border-border bg-card p-5">
           <div className="flex items-center justify-between text-muted-foreground">
-            <span className="text-xs font-medium">Verification Status</span>
-            <CheckCircle2 className="size-4 text-primary" />
+            <span className="text-xs font-medium">Dispatch Radius</span>
+            <MapPin className="size-4 text-primary" />
           </div>
           <div className="mt-3">
             <div className="text-2xl font-bold text-foreground">
-              Verified Partner
+              {profile.serviceRadiusKm} km
             </div>
             <p className="mt-1 text-xs text-muted-foreground">
-              Active community receiver
+              Configured receiver scope
             </p>
           </div>
         </div>
@@ -159,6 +252,15 @@ async function ReceiverDashboardContent() {
 
       {/* Receiver Capacity & Preferences Manager */}
       <CapacityManager profile={profile} onUpdateSuccess={() => {}} />
+
+      {/* Map Spatial Radar Dual View */}
+      <MapDualView
+        markers={mapMarkers}
+        center={{ lat: receiverLat, lng: receiverLng }}
+        currentLocationName="DLF Cybercity, Gachibowli"
+        title="Surplus Proximity & Partner Radar"
+        description="View nearby available surplus food listings and volunteer couriers within your rescue service radius."
+      />
 
       {/* Food Discovery Section */}
       <div id="discover" className="space-y-4">
@@ -181,9 +283,7 @@ async function ReceiverDashboardContent() {
         <div className="font-semibold text-foreground mb-1">
           Food Safety Notice for Receivers
         </div>
-        <p className="leading-relaxed">
-          {FOOD_SAFETY_DISCLAIMER}
-        </p>
+        <p className="leading-relaxed">{FOOD_SAFETY_DISCLAIMER}</p>
         <div className="mt-2 text-[11px] text-muted-foreground/80">
           Receivers receive rescued food with zero participation fee. Verify temperature and visual condition before distribution.
         </div>
