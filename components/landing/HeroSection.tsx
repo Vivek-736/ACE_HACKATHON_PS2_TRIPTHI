@@ -13,14 +13,14 @@ export default function HeroSection() {
     >
       <div className="mx-auto flex max-w-4xl flex-col items-center">
         <span
-          className="tripthi-rise inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-xs font-semibold uppercase tracking-widest text-primary"
+          className="Tripti-rise inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-xs font-semibold uppercase tracking-widest text-primary"
         >
           <Leaf className="size-3.5" aria-hidden="true" />
           FOOD RESCUE, REIMAGINED
         </span>
 
         <h1
-          className="tripthi-rise mt-6 text-4xl font-bold tracking-tight text-foreground text-balance sm:text-5xl lg:text-6xl"
+          className="Tripti-rise mt-6 text-4xl font-bold tracking-tight text-foreground text-balance sm:text-5xl lg:text-6xl"
           style={{ animationDelay: "80ms" }}
         >
           <span className="block">Good food deserves</span>
@@ -28,10 +28,10 @@ export default function HeroSection() {
         </h1>
 
         <p
-          className="tripthi-rise mx-auto mt-6 max-w-2xl text-lg text-muted-foreground"
+          className="Tripti-rise mx-auto mt-6 max-w-2xl text-lg text-muted-foreground"
           style={{ animationDelay: "160ms" }}
         >
-          Connect surplus food with the communities that need it. Tripthi brings donors,
+          Connect surplus food with the communities that need it. Tripti brings donors,
           organisations and volunteers together to make every rescue count.
         </p>
 

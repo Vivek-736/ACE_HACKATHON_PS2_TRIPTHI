@@ -3,7 +3,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Menu, X } from "lucide-react";
+import { Menu, X, LayoutDashboard } from "lucide-react";
+import { useUser, UserButton } from "@clerk/nextjs";
 import { buttonVariants } from "@/components/ui/button";
 
 const NAV_LINKS = [
@@ -18,6 +19,7 @@ const FOCUS_RING =
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
+  const { isSignedIn, isLoaded } = useUser();
 
   useEffect(() => {
     if (!open) return;
@@ -45,7 +47,7 @@ export default function Navbar() {
           className={`flex items-center gap-2 rounded-md text-lg font-semibold text-foreground ${FOCUS_RING}`}
         >
           <Image src="/logo.svg" alt="" width={36} height={36} />
-          <span>Tripthi</span>
+          <span>Tripti</span>
         </Link>
 
         <ul className="hidden items-center gap-6 md:flex">
@@ -61,19 +63,41 @@ export default function Navbar() {
           ))}
         </ul>
 
-        <div className="hidden items-center gap-2 md:flex">
-          <Link
-            href="/sign-in"
-            className={`${buttonVariants({ variant: "ghost" })} ${FOCUS_RING}`}
-          >
-            Sign In
-          </Link>
-          <Link
-            href="/sign-up"
-            className={`${buttonVariants({ variant: "default" })} ${FOCUS_RING}`}
-          >
-            Get Started
-          </Link>
+        {/* Desktop Auth Navigation */}
+        <div className="hidden items-center gap-3 md:flex">
+          {isLoaded && isSignedIn ? (
+            <>
+              <Link
+                href="/dashboard"
+                className={`${buttonVariants({ variant: "default", size: "sm" })} ${FOCUS_RING} gap-1.5`}
+              >
+                <LayoutDashboard className="size-4" />
+                <span>Console</span>
+              </Link>
+              <UserButton
+                appearance={{
+                  elements: {
+                    avatarBox: "size-8 border border-border",
+                  },
+                }}
+              />
+            </>
+          ) : (
+            <>
+              <Link
+                href="/sign-in"
+                className={`${buttonVariants({ variant: "ghost" })} ${FOCUS_RING}`}
+              >
+                Sign In
+              </Link>
+              <Link
+                href="/sign-up"
+                className={`${buttonVariants({ variant: "default" })} ${FOCUS_RING}`}
+              >
+                Get Started
+              </Link>
+            </>
+          )}
         </div>
 
         <button
@@ -92,6 +116,7 @@ export default function Navbar() {
         </button>
       </nav>
 
+      {/* Mobile Drawer */}
       <div
         id="mobile-menu"
         className={`overflow-hidden border-t border-border bg-background transition-all duration-200 ease-in-out motion-reduce:transition-none md:hidden ${
@@ -110,20 +135,33 @@ export default function Navbar() {
             </Link>
           ))}
           <div className="mt-2 flex flex-col gap-2">
-            <Link
-              href="/sign-in"
-              onClick={() => setOpen(false)}
-              className={`${buttonVariants({ variant: "ghost" })} w-full ${FOCUS_RING}`}
-            >
-              Sign In
-            </Link>
-            <Link
-              href="/sign-up"
-              onClick={() => setOpen(false)}
-              className={`${buttonVariants({ variant: "default" })} w-full ${FOCUS_RING}`}
-            >
-              Get Started
-            </Link>
+            {isLoaded && isSignedIn ? (
+              <Link
+                href="/dashboard"
+                onClick={() => setOpen(false)}
+                className={`${buttonVariants({ variant: "default" })} w-full ${FOCUS_RING} justify-center gap-1.5`}
+              >
+                <LayoutDashboard className="size-4" />
+                <span>Go to Console</span>
+              </Link>
+            ) : (
+              <>
+                <Link
+                  href="/sign-in"
+                  onClick={() => setOpen(false)}
+                  className={`${buttonVariants({ variant: "ghost" })} w-full ${FOCUS_RING}`}
+                >
+                  Sign In
+                </Link>
+                <Link
+                  href="/sign-up"
+                  onClick={() => setOpen(false)}
+                  className={`${buttonVariants({ variant: "default" })} w-full ${FOCUS_RING}`}
+                >
+                  Get Started
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </div>

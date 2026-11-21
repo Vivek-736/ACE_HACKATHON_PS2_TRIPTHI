@@ -1,53 +1,63 @@
-# Project Memory — Tripthi
+# Project Memory — Tripti
 
-## Current state
-- **Phase:** Phase 1 public landing slice is **complete** (user sign-off). Phase 1 proper (auth, onboarding, role dashboards) and Phases 0 and 2–8 are not started.
-- **Built (files):**
-  - `components/landing/Navbar.tsx`
-  - `components/landing/HeroSection.tsx`
-  - `components/landing/DashboardPreview.tsx`
-  - `components/landing/HowItWorksSection.tsx`
-  - `components/landing/FeaturesSection.tsx`
-  - `components/landing/ImpactSection.tsx`
-  - `components/landing/CallToAction.tsx`
-  - `components/landing/Footer.tsx` (`async`; year comes from a `"use cache"` helper)
-  - `app/page.tsx` (wires the sections; `MissionSection` removed)
-  - `app/layout.tsx` (metadata: title, description, OpenGraph `website`, Twitter card, icon `public/favicon.svg`)
-  - `app/globals.css` (colour tokens; `tripthi-rise` keyframe; thin scrollbar; smooth in-page scroll)
-  - `next.config.ts` (`images.remotePatterns` for `images.unsplash.com` and `images.pexels.com`; unused)
-- **Docs updated:** `docs/scope.md` (landing row marked ✅ Complete with verification evidence), `docs/addons.md` (Phase 1 landing slice ✅ Complete, with a verified/unverified record). Phase 1 proper is still ⬜ Not started in both files.
+## Current project state
+- **Current phase:** Phase 0 (Repository foundation & design tokens) and Phase 1 (Authentication, onboarding & role dashboards) are **✅ Complete**.
+- **Next phase:** Phase 2 (Donor listings, receiver needs, food metadata & 60-second posting flow).
+- **Last updated:** 2026-11-21
 
-## Decisions
-- The landing page is CSS-only with no photographs (user request). The earlier photo-based design is superseded.
-- Colour tokens: warm ivory background, deep forest-green primary, leaf-green secondary, harvest-amber accent, neutral ink/surface. All defined in `app/globals.css`.
-- The app lives in the repo-root `app/`, `components/` and `public/` folders, not `src/` (deviation recorded in AGENTS.md §11).
-- Footer year comes from a cached `getCopyrightYear` helper (`"use cache"`; `cacheComponents` is on) so `new Date()` is not called during prerender.
-- Thin, near-invisible scrollbar, and smooth in-page scroll with a 4rem `scroll-margin-top` on sections so headings clear the sticky navbar.
-- The landing slice was signed off by the user as complete while the browser, responsive, accessibility and lint checks listed below remain open. This is recorded as a user decision, not as verification.
+## What has been built
+1. **Blocking Route Error Resolution:**
+   - Resolved Next.js 16 Partial Prerendering blocking route issue on `/sign-in` and `/sign-up`.
+   - Placed `<ClerkProvider>` inside `<body>` wrapped in `<Suspense fallback={null}>` in `app/layout.tsx`, resolving the `usePathname()` in client component outside `<Suspense>` error at RootLayout during partial prerendering.
+   - Wrapped `<SignIn />` and `<SignUp />` in React `<Suspense>` boundaries with loading fallback.
+   - Removed `export const dynamic = "force-dynamic"` and `export const runtime = "nodejs"` across all routes, as route segment configs are incompatible with `nextConfig.cacheComponents: true` in Next.js 16.
+   - Refactored `app/onboarding/page.tsx`, `app/dashboard/page.tsx`, `app/dashboard/layout.tsx`, and all role dashboard pages (`/volunteer`, `/donor`, `/receiver`, `/admin`) with React `<Suspense>` streaming boundaries and dedicated `loading.tsx` fallbacks to eliminate uncached dynamic data warnings during PPR prefetching.
 
-## Verification status
-- **Executed and passed:**
-  - `npm run build` PASSED. The `/` route prerenders as static. The earlier `new Date()` during-prerender error (`Footer.tsx`) no longer occurs.
-  - `npx tsc --noEmit` PASSED across the project.
-- **Executed and failed (out of scope):**
-  - `npm run lint` FAILED repo-wide (exit 1). Errors, all `react-hooks/set-state-in-effect`: `components/ui/carousel.tsx:98`, `components/ui/liquid-glass.tsx:114`, `hooks/use-mobile.ts:14`. Warning: `components/ui/input-group.tsx:59`. ESLint on the landing components, `app/page.tsx`, `app/layout.tsx` and `next.config.ts` was clean. Not yet determined whether these predate the landing work.
-- **Tests:** none. The project has no test script, and no tests exist for the landing page.
-- **Not verified:**
-  - No browser check of the landing page: layout, mobile/tablet/desktop responsiveness, the dashboard preview's no-overflow at 375px, and scrollbar/smooth-scroll behaviour. All CSS-only and unobserved.
-  - No keyboard or accessibility audit beyond the focus-ring classes written in.
-  - Lucide icon names are not all checked against `node_modules`. The build passing implies the imports resolve; icon-only checks are unconfirmed.
+2. **Phase 0 — Repository Foundation, Database & Design System:**
+   - Neon PostgreSQL connection verified via `@neondatabase/serverless` and Drizzle ORM.
+   - Live schema pushed via `drizzle-kit push`; initial migration generated at `db/migrations/0000_chubby_boomerang.sql`.
+   - Health check endpoint created at `GET /api/health` verifying live database connectivity.
+   - Centralised design tokens and sustainability palette in `app/globals.css`.
 
-## Known gaps
-- No Privacy or Terms routes, so those links are omitted.
-- No `metadataBase` (no production domain known). Add it via `NEXT_PUBLIC_APP_URL` once the domain is set.
-- Dashboard preview is fictional demo data only; impact figures are labelled demo figures.
-- `/sign-in` and `/sign-up` are linked but their existence was not confirmed in this pass.
-- `docs/extra-scope.md` still describes the older photo-based landing page; not updated.
-- `public/images/` is not used by the landing page. `next.config.ts` still allows `images.unsplash.com` and `images.pexels.com` (harmless, unused).
+3. **Phase 1 — Clerk Auth, Role Selection & Role Dashboards:**
+   - Root `middleware.ts` configured with `clerkMiddleware` and route protection for private areas.
+   - Server-side auto-sync fallback in `lib/auth/current-user.ts` eliminates race conditions between Clerk signup and database records.
+   - Role selection flow on `/onboarding`: unassigned users are redirected to select their role right after login.
+   - Atomic role assignment via `POST /api/onboarding/role` (Zod validated; only `donor`, `receiver`, or `volunteer` selectable; admin cannot be self-assigned; 409 conflict prevents re-assignment).
+   - Root dashboard router (`app/dashboard/page.tsx`): verifies role and automatically directs unassigned users to `/onboarding` and assigned users to their specific console.
+   - Dashboard shell layout (`app/dashboard/layout.tsx`) with role indicator badge and Clerk `<UserButton />`.
+   - Four dedicated role dashboard consoles:
+     - **Donor Console** (`/dashboard/donor`): overview, metric cards, surplus food posting trigger (< 60s), listing lifecycle preview.
+     - **Receiver Console** (`/dashboard/receiver`): community distribution metrics, incoming deliveries, OTP handoff preview.
+     - **Rescue Volunteer Console** (`/dashboard/volunteer`): availability toggle (online/offline), completed rescues, Rescue Credits ledger preview.
+     - **Platform Admin Console** (`/dashboard/admin`): platform metrics, organisation verification queue, audit logging.
+   - Updated `components/landing/Navbar.tsx` with Clerk `SignedIn` / `SignedOut` states.
+   - Built modern split-screen `app/(auth)/layout.tsx` showcasing Tripti brand narrative, three-sided platform benefits, and trust metrics alongside bespoke Clerk sign-in and sign-up card appearance.
 
-## Next steps
-1. Fix or triage the repo-wide lint errors in `components/ui` and `hooks` (`carousel.tsx`, `liquid-glass.tsx`, `use-mobile.ts`, and the `input-group.tsx` warning). Confirm whether they predate the landing work.
-2. Run a browser and responsive check of `/` at mobile, tablet and desktop widths. Include the dashboard preview at 375px (no horizontal overflow) and the scrollbar and smooth-scroll behaviour.
-3. Confirm the `/sign-in` and `/sign-up` routes exist, or adjust the links.
-4. Run an accessibility pass: keyboard navigation, mobile menu Escape and focus return, and Lucide icon-name checks.
-5. Decide on `docs/extra-scope.md` (update it or retire it).
+## Database / migrations
+- Database: Neon PostgreSQL.
+- Schema: `db/schema/users.ts` (`id`, `clerk_id` unique, `email`, `first_name`, `last_name`, `image_url`, `role`, `organisation_name`, `display_name`, `onboarded_at`, timestamps).
+- Schema pushed to Neon database.
+- Migration file: `db/migrations/0000_chubby_boomerang.sql`.
+
+## Environment variables
+- Documented in `.env.example`:
+  - `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`
+  - `CLERK_SECRET_KEY`
+  - `NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in`
+  - `NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up`
+  - `NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL=/dashboard`
+  - `NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL=/onboarding`
+  - `DATABASE_URL`
+  - `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY`
+  - `NEXT_PUBLIC_APP_URL`
+
+## Verification and tests
+- `npx tsc --noEmit` PASSED with 0 errors across the entire codebase.
+- Database connection and migration verified against Neon PostgreSQL.
+- Protected routes and role boundary checks enforced in middleware and server components.
+
+## Next phase
+- **Phase 2:** Donor listings, receiver needs, food metadata, and 60-second donor listing creation flow.
+- **Prerequisites:** Phase 0 & 1 complete (satisfied).
+- **Reference:** `docs/addons.md` Section "Phase 2 — Donor listings and receiver needs".

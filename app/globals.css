@@ -129,7 +129,7 @@
   }
 }
 
-@keyframes tripthi-rise {
+@keyframes Tripti-rise {
   from {
     opacity: 0;
     transform: translateY(8px);
@@ -140,12 +140,12 @@
   }
 }
 
-.tripthi-rise {
-  animation: tripthi-rise 500ms ease-out both;
+.Tripti-rise {
+  animation: Tripti-rise 500ms ease-out both;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .tripthi-rise {
+  .Tripti-rise {
     animation: none;
   }
 }
