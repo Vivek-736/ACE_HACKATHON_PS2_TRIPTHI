@@ -1,11 +1,12 @@
-# AGENTS.md — Food Rescue Platform
+# AGENTS.md — Tripthi (formerly Food Rescue Platform)
 
 > **Purpose:** This is the project-wide operating contract for every AI coding agent and human contributor.
 > Read this file before changing code. The detailed implementation plan lives in [`docs/scope.md`](docs/scope.md), and the feature-by-feature specifications, API requirements, acceptance criteria, and agent skill guidance live in [`docs/addons.md`](docs/addons.md).
 
 ## 1. Product identity
 
-**Working product:** Food Rescue Platform  
+**Product name:** Tripthi
+**Former working name:** Food Rescue Platform (renamed 2026; see section 11)  
 **Hackathon:** Codebenders ACE Builders Hackathon 2026  
 **Problem statement:** Problem Statement 2 — Society and Environment, “Rescue the Surplus”.
 
@@ -32,6 +33,14 @@ The platform is not merely a map or a donation listing board. Its central value 
 ### Product promise
 
 **Rescue the surplus. Connect the willing. Deliver before it expires.**
+
+### Tripthi positioning (2026)
+
+- **Central idea:** "Good food deserves a better destination."
+- **Trust line:** "Less waste. More meals. Stronger communities."
+- **Purpose:** a coordinated food-rescue ecosystem, not merely a donation listing site. Donors publish surplus food, receivers (NGOs, shelters, community kitchens) discover suitable donations, volunteers handle transport, and verified deliveries feed measurable impact.
+- **Target users:** donors (restaurants, caterers, hostels, food businesses), receivers (NGOs, shelters, community kitchens), and volunteers. The internal Platform Admin role is unchanged.
+- **Workflow:** share surplus → find what the community needs → volunteer rescues and delivers → verified delivery → impact.
 
 ## 2. Non-negotiable problem-statement requirements
 
@@ -192,15 +201,25 @@ Follow this separation. Adapt names only when there is a clear reason and record
 
 Feature modules should own their schemas, types, service logic and UI where practical. Shared components must not contain donor-, receiver- or volunteer-specific business rules.
 
+**Deliberate deviation — repo-root layout (2026):** the application uses `app/`, `components/` and `public/` at the repository root instead of under `src/`. Reason: the existing scaffold is built this way, and moving it would add churn with no product benefit. Route groups `(auth)` and `(dashboard)` are planned but not yet present. The `(marketing)`, `(donor)`, `(receiver)`, `(volunteer)` and `(admin)` groups above remain planned. Paths written as `src/...` elsewhere in this document are not yet reconciled with this layout. See section 11.
+
 ## 7. UI and design-system rules
 
 ### Centralised design tokens
-- **All colour tokens must be defined in `src/app/globals.css`** using CSS custom properties. Establish the sustainability-inspired brand palette in Phase 0 and apply it consistently to the public landing page and every dashboard.
+- **All colour tokens must be defined in `src/app/globals.css`** (actual file: `app/globals.css`; see section 11) using CSS custom properties. Establish the sustainability-inspired brand palette in Phase 0 and apply it consistently to the public landing page and every dashboard.
 - Define semantic tokens for background, foreground, card, popover, primary, secondary, muted, accent, destructive, border, input, ring, success, warning, info and chart colours.
 - Define a polished light theme first. Use a warm ivory canvas, deep forest-green primary, fresh leaf-green secondary, restrained harvest-amber accent, and neutral ink/surface colours. Add dark theme only if explicitly required; do not spend hackathon time on a second theme unless the product scope calls for it.
 - Components must consume semantic tokens through the design system and Tailwind theme mapping.
 - If a new colour is needed, add or extend a semantic token in `globals.css`; do not introduce one-off colours in component markup.
 - Keep typography, radii, shadows and spacing decisions centralised where appropriate.
+- **Typography (2026):** Geist and Geist Mono are loaded with `next/font/google` in `app/layout.tsx` (variables `--font-geist-sans` and `--font-geist-mono`). Do not add further font families without recording a decision.
+
+### Brand and landing-page assets (2026)
+- `public/logo.svg` (Tripthi emblem) is the logo; `public/favicon.svg` is the favicon.
+- Imagery must be documentary-style, royalty-free photography from Unsplash or Pexels: restaurants packing surplus food, volunteers packing or transporting it, community kitchens, NGO teams, fresh food and realistic handoffs.
+- Do not use Drift assets, AI-generated filler, or imagery that implies poverty or disrespects recipients.
+- Configure `next/image` `remotePatterns` for each chosen host and record the source and licence of every image.
+- Overlays and text-over-image scrims use semantic tokens from `globals.css`, not literal colours.
 
 ### Do
 - Use semantic classes backed by CSS variables, such as `bg-background`, `text-foreground`, `bg-primary`, `text-muted-foreground`, `border-border`, `bg-card`, `text-destructive` and project-defined semantic classes.
@@ -295,5 +314,13 @@ When changing a major decision (database, auth, client-refresh strategy, map pro
 - Update `docs/scope.md` and `docs/addons.md`.
 - Record the decision and date in `memory.md`.
 - Check whether environment variables, data model, security rules and tests need updating.
+
+### Decision entries (2026)
+
+- **2026 — Product renamed to Tripthi.** Previous working name: "Food Rescue Platform". Reason: brand identity for the public landing page and launch. Trade-off: the working name remains in history and in any repository or package identifiers this record does not change. Updated in this change: `AGENTS.md`, `docs/scope.md`, `docs/addons.md` (Phase 1 landing-page slice). Pending: record in `memory.md` at its next update. This change did not edit `memory.md`.
+- **2026 — Landing-page spec recorded (implementation pending).** Central idea, trust line, eight-section order, metadata, imagery rules and interaction rules are recorded in `docs/addons.md` (Phase 1, public landing page slice). Status: in progress, not complete. Trade-off: the hero uses one full-width photo with a dark overlay rather than a composed journey collage. The rescue journey is shown in the How Tripthi Works section instead. This supersedes the earlier Phase 1 wording on the hero, the Discover/About/Impact navigation and the Discover section.
+- **2026 — Repo-root layout deviation.** Spec and this document write `src/app/globals.css`, `src/...` feature folders and `src/app` route groups. The actual layout is `app/globals.css`, `app/layout.tsx`, `components/ui`, `public/`. Reason: the scaffold already uses this layout, and moving it adds churn with no product benefit. Consequence: `src/` paths in this document are not yet reconciled. Follow-up: before Phase 1 auth routes are added, either move the scaffold to `src/` or update the paths in this document. Not changed silently.
+- **2026 — Metadata and footer scope.** Metadata: title "Tripthi — Rescue Food. Share Hope.", OpenGraph type `website`, Twitter card, icon from `public/favicon.svg`. `metadataBase` is omitted because no production domain is known; add it when the domain is set via `NEXT_PUBLIC_APP_URL`. Footer: Privacy and Terms links are omitted until those routes exist. No social links are shown unless configured.
+- **2026 — Image hosts.** Unsplash or Pexels are the sources. The exact `remotePatterns` hosts are not chosen yet and must be recorded when images are selected.
 
 **Do not silently change the stack or product scope.**
