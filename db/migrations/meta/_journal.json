@@ -8,6 +8,13 @@
       "when": 1795285498373,
       "tag": "0000_chubby_boomerang",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1795290713695,
+      "tag": "0001_majestic_domino",
+      "breakpoints": true
     }
   ]
 }

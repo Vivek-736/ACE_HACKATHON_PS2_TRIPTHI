@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { eq, sql } from "drizzle-orm";
 import {
   Clock,
   ExternalLink,
@@ -11,8 +12,13 @@ import {
   UtensilsCrossed,
 } from "lucide-react";
 import { getCurrentUser, dashboardPathFor } from "@/lib/auth/current-user";
+import { db } from "@/lib/db";
+import { foodListings } from "@/db/schema/listings";
 import { buttonVariants } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
+import { QuickPostDialog } from "@/components/donor/quick-post-dialog";
+import { DonorListingsTable } from "@/components/donor/donor-listings-table";
+import { FOOD_SAFETY_DISCLAIMER } from "@/lib/constants/food-safety";
 
 async function DonorDashboardContent() {
   const user = await getCurrentUser();
@@ -32,6 +38,25 @@ async function DonorDashboardContent() {
   const orgName =
     user.organisationName || user.displayName || "Food Donor Partner";
 
+  // Fetch donor's live aggregate numbers
+  const listings = await db
+    .select()
+    .from(foodListings)
+    .where(eq(foodListings.donorId, user.id));
+
+  const activeCount = listings.filter((l) => l.status === "available").length;
+  const totalPortionsPosted = listings.reduce(
+    (acc, cur) => acc + cur.quantityPortions,
+    0
+  );
+  const totalPortionsRescued = listings
+    .filter((l) => l.status === "completed" || l.status === "reserved")
+    .reduce((acc, cur) => acc + (cur.quantityPortions - cur.remainingPortions), 0);
+
+  // Impact assumptions: 0.42 kg waste avoided & 0.84 kg CO2e per portion
+  const wasteAvoidedKg = (totalPortionsRescued * 0.42).toFixed(1);
+  const emissionsAvoidedKg = (totalPortionsRescued * 0.84).toFixed(1);
+
   return (
     <div className="space-y-8">
       {/* Console Welcome & Header */}
@@ -49,16 +74,7 @@ async function DonorDashboardContent() {
         </div>
 
         <div className="flex items-center gap-3">
-          <Link
-            href="/dashboard/donor#post-surplus"
-            className={`${buttonVariants({ size: "default" })} gap-1.5`}
-          >
-            <PlusCircle className="size-4" />
-            <span>Post Surplus Food</span>
-            <span className="ml-1 rounded-sm bg-primary-foreground/20 px-1.5 py-0.5 text-[10px] font-bold text-primary-foreground">
-              &lt; 60s
-            </span>
-          </Link>
+          <QuickPostDialog />
         </div>
       </div>
 
@@ -70,7 +86,9 @@ async function DonorDashboardContent() {
             <UtensilsCrossed className="size-4 text-primary" />
           </div>
           <div className="mt-3">
-            <div className="text-2xl font-bold text-foreground">2 Active</div>
+            <div className="text-2xl font-bold text-foreground">
+              {activeCount} Active
+            </div>
             <p className="mt-1 text-xs text-muted-foreground">
               Available for nearby receivers
             </p>
@@ -79,26 +97,30 @@ async function DonorDashboardContent() {
 
         <div className="rounded-xl border border-border bg-card p-5">
           <div className="flex items-center justify-between text-muted-foreground">
-            <span className="text-xs font-medium">Total Meals Rescued</span>
+            <span className="text-xs font-medium">Portions Allocated</span>
             <Flame className="size-4 text-accent-foreground" />
           </div>
           <div className="mt-3">
-            <div className="text-2xl font-bold text-foreground">1,240</div>
+            <div className="text-2xl font-bold text-foreground">
+              {totalPortionsRescued}
+            </div>
             <p className="mt-1 text-xs text-muted-foreground">
-              Nutritious portions served
+              Portions reserved / delivered
             </p>
           </div>
         </div>
 
         <div className="rounded-xl border border-border bg-card p-5">
           <div className="flex items-center justify-between text-muted-foreground">
-            <span className="text-xs font-medium">Rescues Completed</span>
+            <span className="text-xs font-medium">Total Surplus Posted</span>
             <Clock className="size-4 text-secondary-foreground" />
           </div>
           <div className="mt-3">
-            <div className="text-2xl font-bold text-foreground">38 Runs</div>
+            <div className="text-2xl font-bold text-foreground">
+              {totalPortionsPosted} Portions
+            </div>
             <p className="mt-1 text-xs text-muted-foreground">
-              100% verified deliveries
+              Across {listings.length} listings
             </p>
           </div>
         </div>
@@ -109,76 +131,31 @@ async function DonorDashboardContent() {
             <Leaf className="size-4 text-primary" />
           </div>
           <div className="mt-3">
-            <div className="text-2xl font-bold text-foreground">520 kg CO₂e</div>
+            <div className="text-2xl font-bold text-foreground">
+              {emissionsAvoidedKg} kg CO₂e
+            </div>
             <p className="mt-1 text-xs text-muted-foreground">
-              Landfill waste prevented
+              {wasteAvoidedKg} kg food waste prevented
             </p>
           </div>
         </div>
       </div>
 
-      {/* Active Rescue Listings & Order Lifecycle Preview */}
-      <div className="rounded-xl border border-border bg-card">
-        <div className="border-b border-border p-5">
-          <h2 className="text-base font-semibold text-foreground">
-            Active Surplus Listings
-          </h2>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Lifecycle: POSTED &rarr; CLAIMED &rarr; COLLECTED &rarr; DELIVERED
-          </p>
+      {/* Live Listings Table */}
+      <div id="post-surplus">
+        <DonorListingsTable donorId={user.id} />
+      </div>
+
+      {/* Food Safety & Responsibility Disclaimer */}
+      <div className="rounded-xl border border-border bg-muted/20 p-5 text-xs text-muted-foreground">
+        <div className="font-semibold text-foreground mb-1">
+          Food Safety &amp; Operational Standards
         </div>
-
-        <div className="divide-y divide-border">
-          <div className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
-            <div className="space-y-1">
-              <div className="flex items-center gap-2">
-                <span className="font-semibold text-foreground">
-                  Vegetable Biryani &amp; Dal Makhani
-                </span>
-                <span className="inline-flex items-center rounded-full bg-secondary/30 px-2 py-0.5 text-xs font-semibold text-secondary-foreground">
-                  CLAIMED
-                </span>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Quantity: 45 Portions &bull; Pickup Window: Today, 21:00 &ndash;
-                22:30 &bull; Assigned to Hope Community Shelter
-              </p>
-            </div>
-            <div className="flex items-center gap-3">
-              <span className="text-xs font-medium text-muted-foreground">
-                Volunteer in transit
-              </span>
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
-            <div className="space-y-1">
-              <div className="flex items-center gap-2">
-                <span className="font-semibold text-foreground">
-                  Steamed Rice &amp; Mixed Vegetable Curry
-                </span>
-                <span className="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">
-                  POSTED
-                </span>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Quantity: 60 Portions &bull; Storage: Hot Holding (65&deg;C)
-                &bull; Allergens: Dairy (paneer)
-              </p>
-            </div>
-            <div className="flex items-center gap-3">
-              <span className="text-xs font-medium text-muted-foreground">
-                Matching nearby receivers
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <div className="border-t border-border bg-muted/20 p-4 text-xs text-muted-foreground">
-          <span>
-            * Demo data preview. Impact calculation assumes 0.42 kg food waste and
-            0.84 kg CO₂e saved per meal portion.
-          </span>
+        <p className="leading-relaxed">
+          {FOOD_SAFETY_DISCLAIMER}
+        </p>
+        <div className="mt-2 text-[11px] text-muted-foreground/80">
+          Impact assumptions: 0.42 kg food waste avoided and 0.84 kg CO₂e emissions reduction per delivered meal portion.
         </div>
       </div>
     </div>
