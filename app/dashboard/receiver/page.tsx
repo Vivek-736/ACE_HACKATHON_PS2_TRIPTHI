@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { eq } from "drizzle-orm";
 import {
   CheckCircle2,
   HeartHandshake,
@@ -11,8 +12,15 @@ import {
   Users,
 } from "lucide-react";
 import { getCurrentUser, dashboardPathFor } from "@/lib/auth/current-user";
+import { db } from "@/lib/db";
+import { receiverProfiles, foodRequests, listingReservations } from "@/db/schema/requests";
 import { buttonVariants } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
+import { CapacityManager } from "@/components/receiver/capacity-manager";
+import { DiscoverFoodView } from "@/components/receiver/discover-food-view";
+import { PostFoodRequestDialog } from "@/components/receiver/post-food-request-dialog";
+import { ReceiverRequestsTable } from "@/components/receiver/receiver-requests-table";
+import { FOOD_SAFETY_DISCLAIMER } from "@/lib/constants/food-safety";
 
 async function ReceiverDashboardContent() {
   const user = await getCurrentUser();
@@ -32,6 +40,39 @@ async function ReceiverDashboardContent() {
   const orgName =
     user.organisationName || user.displayName || "Receiver Organisation";
 
+  // Fetch or initialize receiver profile
+  let [profile] = await db
+    .select()
+    .from(receiverProfiles)
+    .where(eq(receiverProfiles.userId, user.id))
+    .limit(1);
+
+  if (!profile) {
+    const [created] = await db
+      .insert(receiverProfiles)
+      .values({
+        userId: user.id,
+        dailyCapacityPortions: 150,
+        currentCapacityPortions: 150,
+        serviceRadiusKm: 10,
+        dietaryPreferences: "Vegetarian, Cooked Meals, Fresh Produce",
+        operatingHours: "08:30 - 22:00",
+      })
+      .returning();
+    profile = created;
+  }
+
+  // Count reservations & requests
+  const reservations = await db
+    .select()
+    .from(listingReservations)
+    .where(eq(listingReservations.receiverId, user.id));
+
+  const totalPortionsReserved = reservations.reduce(
+    (acc, cur) => acc + cur.portionsReserved,
+    0
+  );
+
   return (
     <div className="space-y-8">
       {/* Console Welcome & Header */}
@@ -44,19 +85,12 @@ async function ReceiverDashboardContent() {
             {orgName}
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Discover matched food donations and coordinate incoming volunteer
-            deliveries.
+            Discover matched food donations and coordinate incoming community distributions.
           </p>
         </div>
 
         <div className="flex items-center gap-3">
-          <Link
-            href="/dashboard/receiver#discover"
-            className={`${buttonVariants({ size: "default" })} gap-1.5`}
-          >
-            <Search className="size-4" />
-            <span>Discover Available Food</span>
-          </Link>
+          <PostFoodRequestDialog onSuccess={() => {}} />
         </div>
       </div>
 
@@ -64,39 +98,45 @@ async function ReceiverDashboardContent() {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div className="rounded-xl border border-border bg-card p-5">
           <div className="flex items-center justify-between text-muted-foreground">
-            <span className="text-xs font-medium">Meals Received</span>
+            <span className="text-xs font-medium">Meals Reserved</span>
             <HeartHandshake className="size-4 text-primary" />
           </div>
           <div className="mt-3">
-            <div className="text-2xl font-bold text-foreground">850 Portions</div>
+            <div className="text-2xl font-bold text-foreground">
+              {totalPortionsReserved} Portions
+            </div>
             <p className="mt-1 text-xs text-muted-foreground">
-              Total received to date
+              Across {reservations.length} rescue claims
             </p>
           </div>
         </div>
 
         <div className="rounded-xl border border-border bg-card p-5">
           <div className="flex items-center justify-between text-muted-foreground">
-            <span className="text-xs font-medium">Incoming Deliveries</span>
-            <Truck className="size-4 text-secondary-foreground" />
+            <span className="text-xs font-medium">Available Capacity</span>
+            <Users className="size-4 text-secondary-foreground" />
           </div>
           <div className="mt-3">
-            <div className="text-2xl font-bold text-foreground">1 En Route</div>
+            <div className="text-2xl font-bold text-foreground">
+              {profile.currentCapacityPortions} / {profile.dailyCapacityPortions}
+            </div>
             <p className="mt-1 text-xs text-muted-foreground">
-              ETA: ~18 mins (Volunteer verified)
+              Portions can accept today
             </p>
           </div>
         </div>
 
         <div className="rounded-xl border border-border bg-card p-5">
           <div className="flex items-center justify-between text-muted-foreground">
-            <span className="text-xs font-medium">Community Beneficiaries</span>
-            <Users className="size-4 text-accent-foreground" />
+            <span className="text-xs font-medium">Active Deliveries</span>
+            <Truck className="size-4 text-accent-foreground" />
           </div>
           <div className="mt-3">
-            <div className="text-2xl font-bold text-foreground">340 People</div>
+            <div className="text-2xl font-bold text-foreground">
+              {reservations.filter((r) => r.status === "confirmed").length} Pending
+            </div>
             <p className="mt-1 text-xs text-muted-foreground">
-              Nourished this month
+              Awaiting volunteer coordination
             </p>
           </div>
         </div>
@@ -107,59 +147,45 @@ async function ReceiverDashboardContent() {
             <CheckCircle2 className="size-4 text-primary" />
           </div>
           <div className="mt-3">
-            <div className="text-2xl font-bold text-foreground">Active Partner</div>
+            <div className="text-2xl font-bold text-foreground">
+              Verified Partner
+            </div>
             <p className="mt-1 text-xs text-muted-foreground">
-              Verified NGO / Shelter
+              Active community receiver
             </p>
           </div>
         </div>
       </div>
 
-      {/* Incoming Rescue Delivery & OTP Handshake Preview */}
-      <div className="rounded-xl border border-border bg-card">
-        <div className="border-b border-border p-5">
-          <h2 className="text-base font-semibold text-foreground">
-            Incoming Delivery &amp; Handshake
+      {/* Receiver Capacity & Preferences Manager */}
+      <CapacityManager profile={profile} onUpdateSuccess={() => {}} />
+
+      {/* Food Discovery Section */}
+      <div id="discover" className="space-y-4">
+        <div>
+          <h2 className="text-lg font-bold text-foreground">
+            Discover Available Surplus Food
           </h2>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Verified handoff requires confirmation upon arrival.
+          <p className="text-xs text-muted-foreground">
+            Browse surplus food posted by nearby restaurants, caterers, and canteens.
           </p>
         </div>
+        <DiscoverFoodView receiverProfile={profile} />
+      </div>
 
-        <div className="p-5">
-          <div className="rounded-lg border border-border bg-muted/20 p-4">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <span className="font-semibold text-foreground">
-                    Vegetable Biryani &amp; Dal Makhani (45 Portions)
-                  </span>
-                  <span className="rounded-full bg-secondary/30 px-2.5 py-0.5 text-xs font-semibold text-secondary-foreground">
-                    COLLECTED &bull; EN ROUTE
-                  </span>
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  From: Royal Feast Banquet Hall &bull; Volunteer: Ravi K.
-                </p>
-              </div>
+      {/* Active Needs / Requests Table */}
+      <ReceiverRequestsTable receiverId={user.id} />
 
-              <div className="flex items-center gap-3">
-                <div className="text-right">
-                  <span className="text-xs text-muted-foreground">Handoff OTP</span>
-                  <div className="font-mono text-base font-bold text-foreground">
-                    8492
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+      {/* Food Safety & Responsibility Disclaimer */}
+      <div className="rounded-xl border border-border bg-muted/20 p-5 text-xs text-muted-foreground">
+        <div className="font-semibold text-foreground mb-1">
+          Food Safety Notice for Receivers
         </div>
-
-        <div className="border-t border-border bg-muted/20 p-4 text-xs text-muted-foreground">
-          <span>
-            * Receivers receive rescued food at zero cost. Safe handling instructions
-            and allergens are documented on every listing.
-          </span>
+        <p className="leading-relaxed">
+          {FOOD_SAFETY_DISCLAIMER}
+        </p>
+        <div className="mt-2 text-[11px] text-muted-foreground/80">
+          Receivers receive rescued food with zero participation fee. Verify temperature and visual condition before distribution.
         </div>
       </div>
     </div>
