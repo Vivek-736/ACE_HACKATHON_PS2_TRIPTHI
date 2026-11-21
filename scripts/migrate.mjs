@@ -19,7 +19,7 @@ async function runMigrations() {
     process.cwd(),
     "db",
     "migrations",
-    "0001_majestic_domino.sql"
+    "0003_aromatic_firelord.sql"
   );
   const sqlContent = fs.readFileSync(migrationFile, "utf-8");
 

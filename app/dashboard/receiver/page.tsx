@@ -23,6 +23,7 @@ import { volunteerProfiles } from "@/db/schema/volunteers";
 import { buttonVariants } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { CapacityManager } from "@/components/receiver/capacity-manager";
+import { OrderTrackingCard } from "@/components/orders/order-tracking-card";
 import { DiscoverFoodView } from "@/components/receiver/discover-food-view";
 import { PostFoodRequestDialog } from "@/components/receiver/post-food-request-dialog";
 import { ReceiverRequestsTable } from "@/components/receiver/receiver-requests-table";
@@ -252,6 +253,9 @@ async function ReceiverDashboardContent() {
 
       {/* Receiver Capacity & Preferences Manager */}
       <CapacityManager profile={profile} onUpdateSuccess={() => {}} />
+
+      {/* Active Orders & Delivery Handshakes */}
+      <OrderTrackingCard role="receiver" userId={user.id} />
 
       {/* Map Spatial Radar Dual View */}
       <MapDualView
