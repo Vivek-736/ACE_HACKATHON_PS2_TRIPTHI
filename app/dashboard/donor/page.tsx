@@ -21,6 +21,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { QuickPostDialog } from "@/components/donor/quick-post-dialog";
 import { DonorListingsTable } from "@/components/donor/donor-listings-table";
+import { OrderTrackingCard } from "@/components/orders/order-tracking-card";
 import { MapDualView } from "@/components/maps/map-dual-view";
 import { calculateHaversineDistanceKm } from "@/lib/maps/haversine";
 import { MapMarker } from "@/lib/maps/types";
@@ -228,6 +229,9 @@ async function DonorDashboardContent() {
           </div>
         </div>
       </div>
+
+      {/* Active Orders & Verification OTPs */}
+      <OrderTrackingCard role="donor" userId={user.id} />
 
       {/* Live Listings Table */}
       <div id="post-surplus">

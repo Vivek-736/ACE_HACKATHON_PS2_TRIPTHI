@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
 import { QuickPostDialog } from "./quick-post-dialog";
+import { MatchingDispatchDialog } from "./matching-dispatch-dialog";
 import type { FoodListing } from "@/db/schema/listings";
 
 interface DonorListingsTableProps {
@@ -260,19 +261,27 @@ export function DonorListingsTable({ donorId }: DonorListingsTableProps) {
 
                 <div className="flex shrink-0 items-center gap-2 self-end sm:self-start">
                   {item.status === "available" && (
-                    <button
-                      type="button"
-                      disabled={cancellingId === item.id}
-                      onClick={() => handleCancel(item.id)}
-                      className="inline-flex items-center gap-1 rounded-md border border-destructive/30 px-2.5 py-1 text-xs font-medium text-destructive transition-colors hover:bg-destructive/10"
-                    >
-                      {cancellingId === item.id ? (
-                        <Spinner className="size-3" />
-                      ) : (
-                        <Trash2 className="size-3" />
-                      )}
-                      <span>Cancel</span>
-                    </button>
+                    <>
+                      <MatchingDispatchDialog
+                        listingId={item.id}
+                        listingTitle={item.title}
+                        remainingPortions={item.remainingPortions}
+                        onDispatchSuccess={fetchListings}
+                      />
+                      <button
+                        type="button"
+                        disabled={cancellingId === item.id}
+                        onClick={() => handleCancel(item.id)}
+                        className="inline-flex items-center gap-1 rounded-md border border-destructive/30 px-2.5 py-1 text-xs font-medium text-destructive transition-colors hover:bg-destructive/10"
+                      >
+                        {cancellingId === item.id ? (
+                          <Spinner className="size-3" />
+                        ) : (
+                          <Trash2 className="size-3" />
+                        )}
+                        <span>Cancel</span>
+                      </button>
+                    </>
                   )}
                 </div>
               </div>

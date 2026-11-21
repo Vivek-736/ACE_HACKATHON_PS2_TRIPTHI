@@ -20,6 +20,7 @@ import { foodListings } from "@/db/schema/listings";
 import { foodRequests } from "@/db/schema/requests";
 import { Spinner } from "@/components/ui/spinner";
 import { VolunteerLocationWidget } from "@/components/volunteer/volunteer-location-widget";
+import { VolunteerOrderConsole } from "@/components/volunteer/volunteer-order-console";
 import { MapDualView } from "@/components/maps/map-dual-view";
 import { calculateHaversineDistanceKm } from "@/lib/maps/haversine";
 import { MapMarker } from "@/lib/maps/types";
@@ -234,6 +235,9 @@ async function VolunteerDashboardContent() {
           </div>
         </div>
       </div>
+
+      {/* Volunteer Active Missions & Rescue Opportunities */}
+      <VolunteerOrderConsole volunteerUserId={user.id} />
 
       {/* Interactive Map & Spatial Radar Dual View */}
       <MapDualView

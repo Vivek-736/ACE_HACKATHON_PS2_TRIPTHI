@@ -1,50 +1,67 @@
 # Project Memory — Tripti
 
 ## Current project state
-- **Current phase:** Phase 0 (Foundation & Tokens), Phase 1 (Auth, Onboarding & Role Dashboards), Phase 2 (Donor Listings, Receiver Needs & <60s Posting Flow), and Phase 3 (Location Model, Maps & Route Calculations) are **✅ Complete**.
-- **Next phase:** Phase 4 (Matching engine, claims and rescue order lifecycle).
+- **Current phase:** Phase 0 (Foundation & Tokens), Phase 1 (Auth, Onboarding & Role Dashboards), Phase 2 (Donor Listings, Receiver Needs & <60s Posting Flow), Phase 3 (Location Model, Maps & Route Calculations), and Phase 4 (Matching Engine, Claims & Rescue Order Lifecycle) are **✅ Complete**.
+- **Next phase:** Phase 5 (Volunteer availability polling and delivery verification).
 - **Last updated:** 2026-11-22
 
 ## What has been built
 
-### 1. Phase 3 — Location Model, Google Maps & Route Calculations
-- **Data Model & Schema:**
-  - `volunteer_profiles` table: `id`, `user_id` (unique fk to `users`), `availability_status` (`available`, `busy`, `offline`), `preferred_radius_km`, `transport_mode` (`bicycle`, `motorcycle`, `car`, `on_foot`), `location_name`, `latitude`, `longitude`, `rescue_credits`, `total_deliveries`, `on_time_rate`, `location_updated_at`, timestamps.
-  - Live migration applied to Neon PostgreSQL via `drizzle-kit push` and migration `db/migrations/0002_happy_next_avengers.sql`.
-- **Spatial Calculations & Utilities (`lib/maps/`):**
-  - `lib/maps/haversine.ts`: spherical Haversine distance formula (`calculateHaversineDistanceKm`), radius testing (`isWithinRadius`), bounding box computation (`calculateBoundingBox`), and ground transport speed/ETA calculation (`estimateTravelTimeMinutes`) factoring in urban traffic buffers.
-  - `lib/maps/types.ts`: typed contracts for `MapMarker`, `RouteSummary`, `NearbyCandidate`, and `LatLng`.
-  - `lib/maps/map-styles.ts`: custom Google Maps JSON styles aligned with Tripti's warm ivory canvas and forest/leaf palette (`TRIPTI_MAP_STYLES`), and role/status marker semantics (`ROLE_MARKER_COLORS`).
-  - `lib/maps/use-google-maps.ts`: asynchronous browser loader hook for Google Maps JavaScript SDK (with `places` and `routes` libraries) supporting graceful fallbacks for missing/unauthorized API keys without crashing the UI.
+### 1. Phase 4 — Matching Engine, Assignment and Rescue Order Lifecycle
+- **Data Model & Schema (`db/schema/orders.ts`):**
+  - `rescue_orders`: `id`, `listing_id`, `receiver_id`, `volunteer_id` (nullable), `allocated_portions`, `status` (`pending`, `accepted`, `at_pickup`, `collected`, `at_receiver`, `delivered`, `declined`, `cancelled`, `failed`), `pickup_otp`, `delivery_otp`, `pickup_deadline`, `collected_at`, `delivered_at`, `cancellation_reason`, `match_score`, timestamps.
+  - `delivery_events`: `id`, `order_id`, `event_type` (`order_created`, `assignment_offered`, `assignment_accepted`, `assignment_declined`, `arrived_at_pickup`, `food_collected`, `arrived_at_receiver`, `food_delivered`, `order_cancelled`, `order_reassigned`), `actor_id`, `actor_role`, `notes`, `proof_photo_url`, `created_at`.
+  - Applied migration `db/migrations/0003_aromatic_firelord.sql` to Neon PostgreSQL. All tables verified live in `information_schema.tables`.
+
+- **Deterministic Matching Engine (`lib/matching/`):**
+  - `lib/matching/engine.ts`:
+    - Hard eligibility filters: active and unexpired listings (`pickup_by > now`), remaining portion availability, receiver remaining capacity, dietary compatibility (`checkDietaryCompatibility` ensuring strict vegan, vegetarian, halal, and jain rules), volunteer duty availability, volunteer preferred rescue radius, and feasibility of transit before pickup deadline.
+    - Deterministic 4-dimension scoring: `0.35 * distanceSuitability + 0.25 * urgencySuitability + 0.20 * reliability + 0.20 * receiverNeedSuitability`.
+    - Non-overriding Rescue Credit tie-breaker bonus (max +5 points).
+    - Normalized 0-100 score calculation with human-readable explainable rationale.
+  - `lib/orders/otp.ts`: secure 4-digit numeric OTP generation (`generateHandoffOtp`) and verification (`verifyHandoffOtp`) for physical handshakes.
+  - `lib/validations/order.ts`: Zod validation schemas for order creation and state transitions (enforces mandatory OTP for `collected` and `delivered` milestones).
+
 - **API Route Handlers:**
-  - `GET /api/map/markers`: aggregates active surplus listings, open receiver requests, and available volunteers; filters by radius and role; applies privacy masking (synthetic demo locations, no personal contact details).
-  - `GET /api/locations/nearby`: proximity candidate shortlisting and travel time estimations for dispatch.
-  - `GET /api/volunteers/profile`: auto-initializes and fetches authenticated volunteer profile.
-  - `PATCH /api/volunteers/location`: updates staging location, coordinates, radius, and transport mode.
-  - `PATCH /api/volunteers/availability`: toggles volunteer dispatch status (`available` ↔ `offline`).
-- **Map Components & Dashboards (`components/maps/`):**
-  - `components/maps/rescue-map.tsx`: interactive Google Map with custom SVG role pin icons (🍽️ Donors, 🏠 Receivers, 🚴 Volunteers with status color badges), click InfoWindows, and dynamic route rendering via Google `DirectionsService` & `DirectionsRenderer`. Features an animated fallback radar visualization when offline or without an API key.
-  - `components/maps/route-card.tsx`: displays route preview, driving distance, ETA in minutes, and safety handoff checks.
-  - `components/maps/map-dual-view.tsx`: accessible toggle between interactive Map View and List View, with role filtering and distance badges.
-  - `components/volunteer/volunteer-location-widget.tsx`: duty status toggle, staging zone selector, and transport mode chooser with instantaneous database sync.
-  - Integrated into **Volunteer Dashboard** (`app/dashboard/volunteer/page.tsx`), **Receiver Dashboard** (`app/dashboard/receiver/page.tsx`), and **Donor Dashboard** (`app/dashboard/donor/page.tsx`).
+  - `POST /api/matching/listings/[listingId]/run`: evaluates candidate receivers and available volunteers, computes match scores and transit times, and returns ranked candidates.
+  - `GET /api/matching/listings/[listingId]/results`: returns ranked match results for dispatch.
+  - `POST /api/rescue-orders`: atomic order creation; validates remaining portions; decrements portions & receiver capacity; generates `pickupOtp` and `deliveryOtp`; audits `order_created`.
+  - `GET /api/rescue-orders`: lists orders with role-based filtering (donors see their listings' orders, receivers see their claims, volunteers see assigned or open orders; masks OTPs so donors only see `pickupOtp` and receivers only see `deliveryOtp`).
+  - `GET /api/rescue-orders/[id]`: order detail with full delivery events timeline and role-filtered OTPs.
+  - `POST /api/rescue-orders/[id]/accept`: volunteer claims assignment with atomic conditional update (`WHERE id = id AND status = 'pending'`); returns 409 Conflict if claimed by another volunteer.
+  - `POST /api/rescue-orders/[id]/decline`: volunteer declines assignment; returns order to pending dispatch queue.
+  - `POST /api/rescue-orders/[id]/cancel`: participant cancellation; restores remaining portions to listing and receiver capacity if not yet collected; releases volunteer.
+  - `POST /api/rescue-orders/[id]/transition`: typed state transitions (`accepted` -> `at_pickup` -> `collected` with pickup OTP -> `at_receiver` -> `delivered` with delivery OTP); awards +50 Rescue Credits on completion and logs immutable audit trail in `delivery_events`.
 
-### 2. Phase 2 — Donor Listings, Receiver Needs, Food Metadata & 60-Second Flow
-- Single-page quick post modal (`QuickPostDialog`) with 1-click meal presets, portion buttons, storage requirements, mandatory allergen declarations, and non-negotiable food safety notice.
-- `food_listings`, `food_requests`, `listing_reservations`, and `receiver_profiles` tables.
-- Capacity manager and food discovery grid on Receiver console.
+- **UI Components & Workflows:**
+  - `components/donor/matching-dispatch-dialog.tsx`: interactive dispatch dialog on Donor Dashboard; allows running the matching engine on any surplus listing, viewing ranked receivers & volunteers with score breakdown cards, and 1-click dispatching.
+  - `components/volunteer/volunteer-order-console.tsx`: live volunteer console with active delivery stepper (`ACCEPTED` -> `AT PICKUP` -> `COLLECTED` -> `AT RECEIVER` -> `DELIVERED`), status action buttons, OTP verification dialogs, and available rescue opportunities list.
+  - `components/orders/order-tracking-card.tsx`: active orders card for Donor and Receiver dashboards; displays live volunteer courier status and prominently reveals the physical verification OTP (`pickupOtp` for Donors, `deliveryOtp` for Receivers).
+  - Integrated across **Donor Dashboard** (`app/dashboard/donor/page.tsx`), **Receiver Dashboard** (`app/dashboard/receiver/page.tsx`), and **Volunteer Dashboard** (`app/dashboard/volunteer/page.tsx`).
 
-### 3. Previous Phases (Phase 0 & 1)
-- Next.js 16 Partial Prerendering and Clerk auth integration (`/sign-in`, `/sign-up`, `/onboarding`).
-- Split-screen auth layout and marketing landing page with centralized design tokens in `app/globals.css`.
-- Dedicated role dashboard shells (`/dashboard/*`).
+### 2. Previous Phases (Phases 0 - 3)
+- Phase 0: Foundation, sustainability design tokens in `app/globals.css`, Neon database & Drizzle ORM.
+- Phase 1: Clerk auth, role onboarding (`/onboarding`), split-screen auth, and role dashboards.
+- Phase 2: Donor listings (<60s flow), receiver needs, food metadata, safety notices, and capacity manager.
+- Phase 3: Spatial location model, Haversine distance, Google Maps JS SDK integration, custom role markers, and dual-view radar.
+
+## Database / migrations
+- Database: Neon PostgreSQL.
+- Migrations:
+  - `0000_chubby_boomerang.sql` (`users`)
+  - `0001_majestic_domino.sql` (`food_listings`, `food_requests`, `listing_reservations`, `receiver_profiles`)
+  - `0002_happy_next_avengers.sql` (`volunteer_profiles`)
+  - `0003_aromatic_firelord.sql` (`rescue_orders`, `delivery_events`)
+- Live tables verified in `information_schema.tables`.
 
 ## Verification and tests
-- `scripts/test-phase3.mjs`: 15 spatial, location, Haversine, ETA, and volunteer validation tests PASSED (0 failures).
+- `scripts/test-phase4.mjs`: 25 unit, matching engine, dietary constraint, OTP verification, and order schema tests PASSED (0 failures).
+- `scripts/test-phase3.mjs`: 15 spatial, Haversine, ETA, and volunteer validation tests PASSED (0 failures).
 - `scripts/test-phase2.mjs`: 11 business rules and validation tests PASSED (0 failures).
 - `npx tsc --noEmit`: Typecheck passes cleanly with 0 errors across the entire codebase.
+- `npm run build`: Production build (`next build --webpack`) PASSED with all static, dynamic API, and partially prerendered dashboard routes.
 
 ## Next phase
-- **Phase 4:** Matching engine, assignment and rescue order lifecycle.
-- **Prerequisites:** Phase 3 complete (satisfied).
-- **Reference:** `docs/addons.md` Section "Phase 4 — Matching engine, assignment and rescue order lifecycle".
+- **Phase 5:** Volunteer availability polling and delivery verification.
+- **Prerequisites:** Phase 4 complete (satisfied).
+- **Reference:** `docs/addons.md` Section "Phase 5 — Volunteer availability polling and delivery verification".
