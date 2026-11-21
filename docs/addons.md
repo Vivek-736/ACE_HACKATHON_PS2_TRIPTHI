@@ -547,7 +547,7 @@ Update `memory.md`; next is Phase 3.
 
 # Phase 3 — Location model, maps and route calculations
 
-**Status:** ⬜ Not started
+**Status:** ✅ Complete
 
 ## Objective
 Show anonymised donor, receiver and volunteer markers on a map; shortlist nearby candidates and calculate useful route distance/ETA.
@@ -613,13 +613,13 @@ Set billing budgets/alerts and API quotas. Use exactly one key named `NEXT_PUBLI
 Do not accept arbitrary unbounded candidate arrays from the browser. Enforce radius, count and rate limits.
 
 ## Acceptance criteria
-- [ ] Map renders with synthetic demo data.
-- [ ] Markers use role/status semantics and legend.
-- [ ] Map has an accessible list alternative.
-- [ ] Candidate shortlist uses spatial filtering or documented fallback.
-- [ ] Browser Routes library returns route distance/ETA for shortlisted locations.
-- [ ] Only one Google key exists in the environment inventory and it is referrer/API restricted.
-- [ ] Public demo does not expose real addresses or personal details.
+- [x] Map renders with synthetic demo data.
+- [x] Markers use role/status semantics and legend.
+- [x] Map has an accessible list alternative.
+- [x] Candidate shortlist uses spatial filtering or documented fallback.
+- [x] Browser Routes library returns route distance/ETA for shortlisted locations.
+- [x] Only one Google key exists in the environment inventory and it is referrer/API restricted.
+- [x] Public demo does not expose real addresses or personal details.
 
 ## Tests
 - Spatial radius query tests.
