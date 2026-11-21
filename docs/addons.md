@@ -288,33 +288,111 @@ Allow donors, receivers and volunteers to register, complete role-specific onboa
 
 Use unique constraints on Clerk IDs and organisation membership. Decide whether one user can hold multiple roles; MVP recommendation is one active role per account, with future role switching only if explicitly supported.
 
-## Public landing page — required implementation slice
+## Public landing page (Tripthi) — required implementation slice
 
-Build the public marketing experience in this phase; do not leave it as a placeholder or treat it as a future polish task. The landing page is the first product surface and must use the same tokens created in Phase 0.
+**Status:** ✅ Complete — signed off by the user. Executed checks: `npm run build` PASSED (`/` prerenders as static; the earlier `new Date()` prerender error in `Footer.tsx` no longer occurs); `npx tsc --noEmit` PASSED across the project. `npm run lint` FAILED repo-wide (exit 1); the errors are in files outside the landing work (see below), and ESLint is clean on the landing components, `app/page.tsx`, `app/layout.tsx` and `next.config.ts`. The project has no test script. The acceptance checkboxes below are not ticked individually: the browser, responsive, accessibility and icon checks listed under "Verification record" were not run, and the user's sign-off accepts that gap.
 
-### Page structure and content
-- **Landing / Hero:** Use the product promise, “Rescue the surplus. Connect the willing. Deliver before it expires.” Explain in one clear sentence that the platform connects food donors, NGOs/community kitchens and rescue volunteers to move surplus food before its pickup deadline. Include primary “Get started” and secondary “Explore how it works” actions.
-- **Discover:** Explain how users discover nearby surplus listings and suitable rescue opportunities. Show a visual preview of food cards/map markers using clearly labelled synthetic demo data; do not expose real addresses.
-- **About:** Explain the problem, the three-sided rescue workflow and the roles of donors, receivers and volunteers. Keep the message human and impact-focused rather than presenting a generic SaaS feature grid.
-- **Impact:** Show the impact metrics the platform will measure (meals rescued, food weight diverted and completed deliveries). Any pre-launch/sample figures must be visibly labelled as illustrative/demo values; do not fabricate live impact.
-- **Footer / CTA:** Repeat the core call to action and provide concise navigation to Discover, About and Impact.
+This slice supersedes the earlier Discover/About/Impact wording and the earlier photo-based version of the landing page. The photo-based version is superseded by the current CSS-only design below; no photograph sourcing is required for this slice. Build the public marketing page in this phase; do not leave it as a placeholder. Use the Phase 0 tokens in `app/globals.css`. The app uses the repo-root `app/` layout, not `src/app/` (see AGENTS.md §6 and §11).
 
-### Visual and interaction requirements
-- Use a clean, modern, trustworthy sustainability identity: warm ivory page canvas, deep forest-green primary actions, leaf-green supporting accents, restrained harvest-amber highlights and neutral ink/surface colours.
-- Use generous whitespace, clear typography hierarchy, strong readable hero copy, rounded but restrained surfaces, subtle borders/shadows and purposeful motion only where it improves comprehension.
-- Navbar includes brand mark/name, Discover, About, Impact, Sign in and a prominent Get started action. Keep it responsive with an accessible mobile navigation.
-- Make the hero visually communicate the complete rescue journey (surplus food → receiver → volunteer → delivery) using composed UI/illustration/cards, not an unrelated stock-photo collage.
-- Use consistent CTA variants and shared shadcn/ui primitives. All colours must come from semantic CSS variables; no inline hex values or raw Tailwind palette classes.
-- Landing-page links must work. “Get started” and “Sign in” connect to Clerk sign-up/sign-in routes. “Discover” may show a public, privacy-safe preview; requesting or claiming food requires authentication.
-- Respect reduced-motion preferences, keyboard navigation, focus visibility, contrast and mobile layouts.
+**Current design record (2026 redesign):** CSS-only SaaS-style page with no photographs. Components live in `components/landing/`: `Navbar`, `HeroSection` (pill badge, two CTAs: "Start Rescuing" and "Explore How It Works"), `DashboardPreview` (CSS-built, fictional demo data), `HowItWorksSection`, `FeaturesSection`, `ImpactSection` (labelled demo figures), `CallToAction` (heading "Be part of something that puts good food to good use." with `/sign-up?role=donor` and `/sign-up?role=volunteer`) and `Footer`. `MissionSection` was removed. The earlier photo-based design is superseded. The Footer prerender error (`new Date()` under `cacheComponents`) is fixed by a `"use cache"` helper, `getCopyrightYear`, with `Footer` made `async`; the build now passes.
+
+**Design decisions:** forest-green, leaf-green, ivory and harvest-amber tokens in `app/globals.css`; `app/` at the repo root, not `src/`; footer year via a `"use cache"` helper (`cacheComponents` is on); thin, near-invisible scrollbar, and smooth in-page scrolling with a 4rem `scroll-margin-top` so headings clear the sticky navbar.
+
+**Verification record**
+
+Executed (passed):
+- `npm run build` PASSED. The `/` route prerenders as static. The earlier `new Date()` during-prerender error (`Footer.tsx`) no longer occurs.
+- `npx tsc --noEmit` PASSED across the project.
+
+Executed (failed, out of scope):
+- `npm run lint` FAILED repo-wide (exit 1). Errors, all `react-hooks/set-state-in-effect`: `components/ui/carousel.tsx:98`, `components/ui/liquid-glass.tsx:114`, `hooks/use-mobile.ts:14`. Warning: `components/ui/input-group.tsx:59`. ESLint on the landing components, `app/page.tsx`, `app/layout.tsx` and `next.config.ts` was clean. Not yet determined whether these errors predate the landing work.
+
+Not run: the project has no test script, so there are no automated tests.
+
+Not verified (recorded, not dropped):
+- No browser check of the landing page: layout, mobile/tablet/desktop responsiveness, the dashboard preview's no-overflow at 375px, and the scrollbar and smooth-scroll behaviour. These are CSS-only and unobserved.
+- No keyboard or accessibility audit beyond the focus-ring classes written in.
+- Lucide icon names are not all checked against `node_modules`. The build passing implies the imports resolve, but icon-only checks are unconfirmed.
+- `/sign-in` and `/sign-up` are linked but their existence was not confirmed in this pass.
+- No Privacy or Terms routes (links omitted); no `metadataBase` (no production domain known).
+- Dashboard preview is fictional demo data only; impact figures are labelled demo figures.
+- `docs/extra-scope.md` still describes the older photo-based landing page; not updated.
+- `public/images/` is not used by the landing page. `next.config.ts` still allows `images.unsplash.com` and `images.pexels.com` (harmless, unused).
+
+### Messaging
+- **Central idea:** "Good food deserves a better destination."
+- **Trust line:** "Less waste. More meals. Stronger communities."
+- **Purpose:** a coordinated food-rescue ecosystem. Donors publish surplus food, receivers (NGOs, shelters, community kitchens) discover suitable donations, volunteers handle transport, and verified deliveries feed measurable impact. It is not merely a donation listing site.
+- **Workflow:** share surplus → find what the community needs → volunteer rescues and delivers → verified delivery → impact.
+
+### Visual direction
+- Minimal white/ivory navbar with generous whitespace and a clean SaaS-style product-page layout.
+- Centred hero with a pill badge reading "FOOD RESCUE, REIMAGINED".
+- Large, bold headline: "Good food deserves / a better destination." The second line is set in forest-green primary.
+- Tripthi uses its own forest-green, leaf-green, warm ivory and harvest-amber tokens. Do not use any other product's palette or branding.
+- **No photographs, background images, videos, stock or external visual assets.** All visuals are CSS, typography and `lucide-react` icons.
+
+### Page sections (in this order)
+1. **Navbar:** minimal white/ivory bar with the Tripthi logo and wordmark (`public/logo.svg` emblem). Links: Home (`#top`), How It Works (`#how-it-works`), Features (`#features`), Impact (`#impact`). Actions: Sign In (`/sign-in`) and Get Started (`/sign-up`). Mobile menu: a labelled button with `aria-expanded` and `aria-controls`; Escape closes the menu and focus returns to the button.
+2. **Hero:** centred layout. Pill badge "FOOD RESCUE, REIMAGINED". Headline: "Good food deserves / a better destination." (second line in forest-green primary). Supporting line: "Tripthi connects food donors, community organisations, and volunteers to rescue surplus food and deliver it where it matters most." CTAs: "Start Rescuing" (primary, `/sign-up`) and "Explore How It Works" (outline, `#how-it-works`). Trust line: "Less waste. More meals. Stronger communities."
+3. **Dashboard preview:** a CSS-built mock product window with a sidebar, four metric cards, a food-listings table with status badges (`POSTED`, `CLAIMED`, `COLLECTED`, `DELIVERED`, each with a text label and icon), and a rescue-activity timeline. Labelled "fictional demo data". Stacks on mobile without horizontal overflow.
+4. **How It Works** (`#how-it-works`): three steps for Donors, Receivers and Volunteers. Label: "THE RESCUE JOURNEY". Heading: "From surplus to someone who needs it."
+5. **Features** (`#features`): four compact panels: Smart Food Discovery, Intelligent Matching, Verified Deliveries, Impact Tracking. Label: "BUILT FOR BETTER RESCUES". Heading: "Everything needed to make every rescue count." Note that these panels describe the intended experience, not features that are live today. Any preview is labelled illustrative/demo and uses synthetic data only.
+6. **Impact** (`#impact`): deep forest-green band. Label: "THE DIFFERENCE WE MAKE". Heading: "Small rescues. Meaningful change." Labelled demo figures: Meals Delivered, Food Rescued, Completed Deliveries. Values are illustrative placeholders. State that only verified deliveries count.
+7. **Final CTA:** heading "Be part of something that puts good food to good use." Two actions: "Become a Donor" (`/sign-up?role=donor`) and "Join as a Volunteer" (`/sign-up?role=volunteer`). Until role onboarding exists, these routes resolve to the sign-up route with the role hint; do not invent further onboarding URLs.
+8. **Footer:** minimal. Brand plus "Connecting surplus food with the communities that need it." Navigation links (same anchors as the navbar). Sign In and Get Started. Copyright line. Privacy and Terms links are omitted until those routes exist. No social links unless configured.
+
+### Routes used
+- `/sign-in`, `/sign-up`, `/sign-up?role=donor`, `/sign-up?role=volunteer`
+- In-page anchors: `#how-it-works`, `#features`, `#impact`
+
+### Visual and interaction
+- Colours come only from semantic tokens in `app/globals.css`: warm ivory canvas, deep forest-green primary, leaf-green secondary, harvest-amber accent, and dark natural green/brown text. If a token is missing, add it to `globals.css`; do not add it in component markup.
+- No raw palette classes, no arbitrary hex values and no inline colour literals.
+- Generous whitespace, subtle borders and restrained shadows. Avoid glassmorphism and heavy gradients.
+- Reuse existing shadcn components in `components/ui` and `lucide-react` icons. Pair every icon with text where meaning is not obvious.
+- Smooth anchor scrolling. Anchor targets need `scroll-margin` so the sticky navbar does not hide headings.
+- Scroll-reveal animation, disabled when `prefers-reduced-motion` is set.
+- Visible focus rings from the `ring` token. Full keyboard navigation.
+- Responsive layouts tested at mobile, tablet and desktop widths.
+
+### Imagery
+- None. The landing page uses no photographs, background images, videos, stock or external visual assets. Visuals are CSS, typography and `lucide-react` icons only.
+- No `next/image` `remotePatterns` are required for this slice.
+
+### Brand and typography
+- Logo: `public/logo.svg` (Tripthi emblem). Favicon: `public/favicon.svg`.
+- Typography: Geist and Geist Mono via `next/font/google` in `app/layout.tsx`. This slice adds no fonts.
+
+### Metadata and SEO
+- Title: "Tripthi — Rescue Food. Share Hope."
+- Description: "Tripthi connects food donors, NGOs, and volunteers to rescue surplus food and deliver it to communities that need it."
+- OpenGraph type: `website`. Twitter card: set.
+- `metadataBase` is omitted because no production domain is known. Add it when the domain is set, using `NEXT_PUBLIC_APP_URL`.
+- Icon: `public/favicon.svg`.
+
+### Safety and data rules
+- Static content only. This slice adds no new environment variables.
+- Synthetic metrics and previews are labelled illustrative/demo. No real addresses or personal details.
+- No food-safety certification, tax, legal or regulatory-benefit claims. The platform connects people; it does not certify food.
 
 ### Acceptance criteria
-- [ ] Landing, Discover, About and Impact sections are implemented and linked from the navbar.
-- [ ] Hero communicates the problem, solution and three user roles without requiring a scroll.
-- [ ] Primary and secondary CTAs navigate to real application routes.
-- [ ] Landing page uses the exact Phase 0 semantic tokens and shared component variants.
-- [ ] Responsive mobile/tablet/desktop layouts and accessible navigation pass review.
-- [ ] Synthetic metrics and locations are clearly labelled; no real personal data is shown.
+- [ ] Sections 1–8 render in the order above with the specified labels and headings.
+- [ ] Navbar links and footer links scroll smoothly to their anchors, with headings clear of the sticky navbar.
+- [ ] Mobile menu is keyboard-operable, announces its state, and closes on Escape.
+- [ ] "Start Rescuing", "Get Started", "Become a Donor" and "Join as a Volunteer" link to real routes. No dead links.
+- [ ] Dashboard preview is labelled "fictional demo data" and stacks on mobile without horizontal overflow.
+- [ ] Features are described as the intended experience.
+- [ ] Impact figures are labelled demo values; only verified deliveries count.
+- [ ] Reduced-motion preference is honoured.
+- [ ] No raw palette classes, arbitrary hex values or inline colour literals in components.
+- [ ] No photographs or external visual assets are used.
+- [ ] Metadata matches the spec above.
+- [ ] Responsive review passes at mobile, tablet and desktop widths.
+- [ ] Lint, typecheck and build pass.
+- [ ] No food-safety, tax or legal claims.
+
+
 
 ## User flows
 ### Shared

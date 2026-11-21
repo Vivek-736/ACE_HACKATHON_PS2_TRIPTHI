@@ -1,10 +1,10 @@
-# Project Scope — Food Rescue Platform
+# Project Scope — Tripthi
 
 > This document defines what we are building, why, the boundaries of the MVP, architecture, milestones and progress tracking. Read [`../AGENTS.md`](../AGENTS.md) first. Detailed implementation specifications and phase prerequisites are in [`addons.md`](addons.md).
 
 ## 1. Product overview
 
-**Working name:** Food Rescue Platform  
+**Product name:** Tripthi (renamed from the working name "Food Rescue Platform" in 2026; see AGENTS.md §11)  
 **Hackathon:** Codebenders ACE Builders Hackathon 2026  
 **Problem statement:** Problem Statement 2 — Society and Environment, “Rescue the Surplus”.
 
@@ -25,6 +25,13 @@ The system finds eligible receivers and volunteers, ranks rescue options using d
 ### Product positioning
 
 **Rescue the surplus. Connect the willing. Deliver before it expires.**
+
+### Tripthi landing-page message (2026)
+- **Central idea:** "Good food deserves a better destination."
+- **Trust line:** "Less waste. More meals. Stronger communities."
+- **Purpose:** a coordinated food-rescue ecosystem, not merely a donation listing site. Donors publish surplus food, receivers discover suitable donations, volunteers handle transport, and verified deliveries feed measurable impact.
+- **Target users:** donors (restaurants, caterers, hostels, food businesses), receivers (NGOs, shelters, community kitchens), volunteers.
+- **Workflow:** share surplus → find what the community needs → volunteer rescues and delivers → verified delivery → impact.
 
 ## 2. Goals and success criteria
 
@@ -131,7 +138,7 @@ These are hypotheses for the prototype, not validated market prices.
 | Full-stack framework | Next.js App Router | Frontend, server rendering, API Route Handlers |
 | Language | TypeScript | Type-safe application |
 | UI | React, Tailwind CSS, shadcn/ui | Dashboards and accessible components |
-| Design tokens | CSS variables in `src/app/globals.css` | Centralised theme |
+| Design tokens | CSS variables in `app/globals.css` (spec path `src/app/globals.css`; see AGENTS.md §11) | Centralised theme |
 | Authentication | Clerk | Sign-in, sign-up, session |
 | Database | Neon PostgreSQL | Persistent records |
 | Spatial queries | PostGIS where enabled | Nearby candidate filtering |
@@ -172,6 +179,7 @@ Browser / Next.js UI
 - PostGIS/Haversine shortlists candidates server-side. The single browser-restricted Google Maps key powers Maps JavaScript, Places and the browser Routes library for a limited shortlist; no server-side Google Maps calls.
 - Trigger.dev handles durable scheduled work; do not use in-memory timers.
 - No Redis or microservices for the initial build.
+- Repository layout (2026): `app/`, `components/` and `public/` sit at the repo root, not under `src/`. Paths written as `src/...` in this document are pending reconciliation; see AGENTS.md §11.
 
 ## 7. Main domain entities
 
@@ -242,7 +250,7 @@ Initial MVP calculations:
 
 ## 11. UI system requirements
 
-- All colour tokens live in `src/app/globals.css`; the same forest/leaf/harvest palette is shared by the public landing page and every authenticated dashboard.
+- All colour tokens live in `src/app/globals.css` (actual file `app/globals.css`; see AGENTS.md §11); the same forest/leaf/harvest palette is shared by the public landing page and every authenticated dashboard.
 - Use semantic tokens and semantic utility classes mapped to those tokens.
 - Never use raw palette classes such as `bg-red-100`, `text-blue-600`, `border-green-300`, arbitrary hex values or inline colour literals.
 - Use shadcn/ui primitives and consistent dashboard shells.
@@ -263,6 +271,7 @@ Update this table at the end of every phase. Do not mark a phase complete until 
 |---|---|---|---|
 | 0 | Repository foundation, design tokens, env validation, database connection | ⬜ Not started | App boots, lint/typecheck, DB connection |
 | 1 | Public landing page, Clerk auth, role onboarding and role dashboards | ⬜ Not started | Landing sections render responsively; three roles can register and access correct dashboards |
+| 1 (landing slice) | Tripthi public landing page (spec in `addons.md`, Phase 1) | ✅ Complete (user sign-off) | CSS-only SaaS-style page, no photographs; components in `components/landing/`. Executed: `npm run build` PASSED, `/` prerenders as static, and the Footer `new Date()` prerender error no longer occurs. `npx tsc --noEmit` PASSED. `npm run lint` FAILED repo-wide (exit 1) on out-of-scope files (`components/ui/carousel.tsx`, `components/ui/liquid-glass.tsx`, `hooks/use-mobile.ts`; warning in `components/ui/input-group.tsx`); ESLint clean on landing components, `app/page.tsx`, `app/layout.tsx`, `next.config.ts`. Not browser-verified (layout, responsiveness, scrollbar and smooth scroll). See `addons.md` Phase 1 landing slice for the full verified/unverified record. Phase 1 proper (auth, onboarding, dashboards) remains not started. |
 | 2 | Donor listings, receiver needs, food metadata | ⬜ Not started | Listing created in under 60 seconds; validation works |
 | 3 | Neon/PostGIS location model, Google Maps and Routes | ⬜ Not started | Synthetic markers and route/ETA work |
 | 4 | Matching engine, claims and rescue order lifecycle | ⬜ Not started | Eligible matches ranked; concurrent claim protected |

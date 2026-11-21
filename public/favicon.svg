@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" fill="none">
+  <!-- Brand Background Squircle (Deep Forest Green) -->
+  <rect width="64" height="64" rx="16" fill="#134E3A"/>
+
+  <!-- Tripthi Emblem: Nourishing Bowl, Rescue Sprout & Golden Grain forming "T" -->
+  <g id="tripthi-mark">
+    <!-- The Nourishing Bowl (Warm Ivory) -->
+    <path d="M13 37C11.5 37 10.5 38.5 11.2 40C14.5 49.5 22.5 55 32 55C41.5 55 49.5 49.5 52.8 40C53.5 38.5 52.5 37 51 37C45 40.5 38.8 42 32 42C25.2 42 19 40.5 13 37Z" fill="#FAF8F5"/>
+
+    <!-- Left Sprout Leaf (Fresh Leaf Green: Sustainability & Volunteer Rescue) -->
+    <path d="M32 39C30.5 28 21.5 19 14.5 19.5C14 26 20.5 35 32 39Z" fill="#34D399"/>
+
+    <!-- Right Sprout Leaf (Harvest Amber: Receiver Nourishment & Food Saved) -->
+    <path d="M32 39C33.5 28 42.5 19 49.5 19.5C50 26 43.5 35 32 39Z" fill="#FBBF24"/>
+
+    <!-- Central Radiant Grain / Warmth Droplet (Hunger Satisfied / Tripthi) -->
+    <path d="M32 8.5C32 8.5 36.5 13.5 36.5 17C36.5 19.5 34.5 21.5 32 21.5C29.5 21.5 27.5 19.5 27.5 17C27.5 13.5 32 8.5 32 8.5Z" fill="#F59E0B"/>
+  </g>
+</svg>
