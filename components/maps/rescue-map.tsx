@@ -27,6 +27,41 @@ interface RescueMapProps {
   className?: string;
 }
 
+// Decode Google encoded polyline string to coordinate points
+function decodePolyline(encoded: string): Array<{ lat: number; lng: number }> {
+  const points: Array<{ lat: number; lng: number }> = [];
+  let index = 0;
+  const len = encoded.length;
+  let lat = 0;
+  let lng = 0;
+
+  while (index < len) {
+    let b: number;
+    let shift = 0;
+    let result = 0;
+    do {
+      b = encoded.charCodeAt(index++) - 63;
+      result |= (b & 0x1f) << shift;
+      shift += 5;
+    } while (b >= 0x20);
+    const dlat = (result & 1) !== 0 ? ~(result >> 1) : result >> 1;
+    lat += dlat;
+
+    shift = 0;
+    result = 0;
+    do {
+      b = encoded.charCodeAt(index++) - 63;
+      result |= (b & 0x1f) << shift;
+      shift += 5;
+    } while (b >= 0x20);
+    const dlng = (result & 1) !== 0 ? ~(result >> 1) : result >> 1;
+    lng += dlng;
+
+    points.push({ lat: lat / 1e5, lng: lng / 1e5 });
+  }
+  return points;
+}
+
 export function RescueMap({
   markers,
   center = MAP_CENTER_DEFAULT,
@@ -39,8 +74,7 @@ export function RescueMap({
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<google.maps.Map | null>(null);
   const markersRef = useRef<google.maps.Marker[]>([]);
-  const directionsRendererRef = useRef<google.maps.DirectionsRenderer | null>(null);
-  const fallbackPolylineRef = useRef<google.maps.Polyline | null>(null);
+  const routePolylineRef = useRef<google.maps.Polyline | null>(null);
   const activeInfoWindowRef = useRef<google.maps.InfoWindow | null>(null);
 
   const { isLoaded, loadError } = useGoogleMaps();
@@ -72,19 +106,6 @@ export function RescueMap({
       });
 
       mapInstanceRef.current = map;
-
-      if (typeof google.maps.DirectionsRenderer === "function") {
-        const directionsRenderer = new google.maps.DirectionsRenderer({
-          map,
-          suppressMarkers: false,
-          polylineOptions: {
-            strokeColor: "#1b4d3e", // Tripti deep forest green
-            strokeWeight: 5,
-            strokeOpacity: 0.85,
-          },
-        });
-        directionsRendererRef.current = directionsRenderer;
-      }
     } catch (e) {
       console.error("Error creating Google Map instance:", e);
       setRuntimeError("MAP_INIT_ERROR");
@@ -194,24 +215,19 @@ export function RescueMap({
     }
   }, [isLoaded, markers, selectedMarkerId, activeRoute, onMarkerClick]);
 
-  // Route drawing via Google DirectionsService with Geodesic Polyline Fallback
+  // Modern Route Drawing via Google Routes API with Geodesic Polyline Fallback
   useEffect(() => {
-    // Clean up previous directions and fallback line
-    if (fallbackPolylineRef.current) {
-      fallbackPolylineRef.current.setMap(null);
-      fallbackPolylineRef.current = null;
+    // Clean up previous route polyline
+    if (routePolylineRef.current) {
+      routePolylineRef.current.setMap(null);
+      routePolylineRef.current = null;
     }
 
-    if (!isLoaded || !activeRoute) {
-      if (directionsRendererRef.current) {
-        directionsRendererRef.current.setDirections({
-          routes: [],
-        } as unknown as google.maps.DirectionsResult);
-      }
+    if (!isLoaded || !activeRoute || !mapInstanceRef.current) {
       return;
     }
 
-    const drawFallbackPolyline = () => {
+    const drawPolyline = (path: Array<{ lat: number; lng: number }>) => {
       if (
         !mapInstanceRef.current ||
         typeof window.google === "undefined" ||
@@ -221,61 +237,87 @@ export function RescueMap({
         return;
       }
 
-      const path = [
-        { lat: activeRoute.origin.lat, lng: activeRoute.origin.lng },
-        { lat: activeRoute.destination.lat, lng: activeRoute.destination.lng },
-      ];
-
       const polyline = new google.maps.Polyline({
         path,
         geodesic: true,
-        strokeColor: "#1b4d3e", // Tripti forest green
-        strokeOpacity: 0.85,
-        strokeWeight: 4,
+        strokeColor: "#1b4d3e", // Tripti deep forest green
+        strokeOpacity: 0.9,
+        strokeWeight: 5,
         map: mapInstanceRef.current,
       });
 
-      fallbackPolylineRef.current = polyline;
+      routePolylineRef.current = polyline;
 
       if (typeof window.google.maps.LatLngBounds === "function") {
         const bounds = new google.maps.LatLngBounds();
-        path.forEach((p) => bounds.extend(p));
-        mapInstanceRef.current.fitBounds(bounds, 70);
+        path.forEach((pt) => bounds.extend(pt));
+        mapInstanceRef.current.fitBounds(bounds, 65);
       }
     };
 
-    try {
-      if (
-        typeof window.google === "undefined" ||
-        typeof window.google.maps === "undefined" ||
-        typeof window.google.maps.DirectionsService !== "function"
-      ) {
-        drawFallbackPolyline();
-        return;
-      }
+    const directPath = [
+      { lat: activeRoute.origin.lat, lng: activeRoute.origin.lng },
+      { lat: activeRoute.destination.lat, lng: activeRoute.destination.lng },
+    ];
 
-      const directionsService = new google.maps.DirectionsService();
+    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 
-      directionsService.route(
-        {
-          origin: { lat: activeRoute.origin.lat, lng: activeRoute.origin.lng },
-          destination: {
-            lat: activeRoute.destination.lat,
-            lng: activeRoute.destination.lng,
-          },
-          travelMode: google.maps.TravelMode.DRIVING,
+    // Use Google Routes API (v2:computeRoutes)
+    if (apiKey && apiKey !== "your-google-maps-api-key" && apiKey.trim() !== "") {
+      let isCancelled = false;
+
+      fetch("https://routes.googleapis.com/directions/v2:computeRoutes", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Goog-Api-Key": apiKey,
+          "X-Goog-FieldMask": "routes.polyline.encodedPolyline,routes.distanceMeters,routes.duration",
         },
-        (result, status) => {
-          if (status === google.maps.DirectionsStatus.OK && result) {
-            directionsRendererRef.current?.setDirections(result);
-          } else {
-            // When Directions API is disabled or denied on Google Cloud, fallback to geodesic route trajectory
-            drawFallbackPolyline();
+        body: JSON.stringify({
+          origin: {
+            location: {
+              latLng: {
+                latitude: activeRoute.origin.lat,
+                longitude: activeRoute.origin.lng,
+              },
+            },
+          },
+          destination: {
+            location: {
+              latLng: {
+                latitude: activeRoute.destination.lat,
+                longitude: activeRoute.destination.lng,
+              },
+            },
+          },
+          travelMode: "DRIVE",
+          routingPreference: "TRAFFIC_AWARE",
+        }),
+      })
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (isCancelled) return;
+          const encoded = data?.routes?.[0]?.polyline?.encodedPolyline;
+          if (encoded) {
+            const decodedPath = decodePolyline(encoded);
+            if (decodedPath.length > 0) {
+              drawPolyline(decodedPath);
+              return;
+            }
           }
-        }
-      );
-    } catch {
-      drawFallbackPolyline();
+          drawPolyline(directPath);
+        })
+        .catch(() => {
+          if (!isCancelled) {
+            drawPolyline(directPath);
+          }
+        });
+
+      return () => {
+        isCancelled = true;
+      };
+    } else {
+      drawPolyline(directPath);
     }
   }, [isLoaded, activeRoute]);
 
