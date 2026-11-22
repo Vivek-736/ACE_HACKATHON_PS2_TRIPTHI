@@ -8,7 +8,7 @@ import "./globals.css";
 
 const robotoCondensed = Roboto_Condensed({
   subsets: ["latin"],
-  variable: "--font-roboto-condensed",
+  variable: "--font-sans",
   weight: ["300", "400", "500", "600", "700"],
   display: "swap",
 });
@@ -39,7 +39,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${robotoCondensed.className} h-full antialiased`}
+      className={`${robotoCondensed.variable} ${robotoCondensed.className} font-sans h-full antialiased`}
     >
       <head>
         <script
