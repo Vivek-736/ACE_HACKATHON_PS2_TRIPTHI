@@ -41,6 +41,42 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       className={`${robotoCondensed.className} h-full antialiased`}
     >
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if (typeof window !== 'undefined') {
+                window.addEventListener('error', function(e) {
+                  var fn = e.filename || '';
+                  var st = (e.error && e.error.stack) || '';
+                  if (
+                    fn.indexOf('chrome-extension://') !== -1 ||
+                    fn.indexOf('moz-extension://') !== -1 ||
+                    fn.indexOf('safari-extension://') !== -1 ||
+                    st.indexOf('chrome-extension://') !== -1 ||
+                    st.indexOf('moz-extension://') !== -1
+                  ) {
+                    e.stopImmediatePropagation();
+                    e.preventDefault();
+                    return true;
+                  }
+                }, true);
+                window.addEventListener('unhandledrejection', function(e) {
+                  var reason = e.reason;
+                  var st = (reason && reason.stack) || '';
+                  if (
+                    st.indexOf('chrome-extension://') !== -1 ||
+                    st.indexOf('moz-extension://') !== -1
+                  ) {
+                    e.stopImmediatePropagation();
+                    e.preventDefault();
+                  }
+                }, true);
+              }
+            `,
+          }}
+        />
+      </head>
       <body className="min-h-full flex flex-col">
         <Suspense fallback={null}>
           <ClerkProvider>

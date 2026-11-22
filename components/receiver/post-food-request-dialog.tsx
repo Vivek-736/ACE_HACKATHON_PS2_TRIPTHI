@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/dialog";
 import { buttonVariants } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
-import { HYDERABAD_DEMO_LOCATIONS } from "@/lib/constants/demo-locations";
+import { DEMO_LOCATIONS } from "@/lib/constants/demo-locations";
 
 interface PostFoodRequestDialogProps {
   onSuccess?: () => void;
@@ -40,12 +40,12 @@ export function PostFoodRequestDialog({ onSuccess }: PostFoodRequestDialogProps)
   );
   const [neededHoursAhead, setNeededHoursAhead] = useState(4);
   const [selectedLocationId, setSelectedLocationId] = useState(
-    HYDERABAD_DEMO_LOCATIONS[0].id
+    DEMO_LOCATIONS[0].id
   );
 
   const selectedLocation =
-    HYDERABAD_DEMO_LOCATIONS.find((loc) => loc.id === selectedLocationId) ||
-    HYDERABAD_DEMO_LOCATIONS[0];
+    DEMO_LOCATIONS.find((loc) => loc.id === selectedLocationId) ||
+    DEMO_LOCATIONS[0];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -137,7 +137,7 @@ export function PostFoodRequestDialog({ onSuccess }: PostFoodRequestDialogProps)
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="e.g. Seeking 50 meals for evening service"
-              className="w-full rounded-md border border-input bg-card px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none"
+              className="w-full rounded-md border border-input bg-card px-3 py-2 text-sm text-foreground focus:outline-none"
             />
           </div>
 
@@ -153,7 +153,7 @@ export function PostFoodRequestDialog({ onSuccess }: PostFoodRequestDialogProps)
                 required
                 value={requestedPortions}
                 onChange={(e) => setRequestedPortions(Number(e.target.value))}
-                className="w-full rounded-md border border-input bg-card px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none"
+                className="w-full rounded-md border border-input bg-card px-3 py-2 text-sm text-foreground focus:outline-none"
               />
             </div>
 
@@ -164,7 +164,7 @@ export function PostFoodRequestDialog({ onSuccess }: PostFoodRequestDialogProps)
               <select
                 value={neededHoursAhead}
                 onChange={(e) => setNeededHoursAhead(Number(e.target.value))}
-                className="w-full rounded-md border border-input bg-card px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none"
+                className="w-full rounded-md border border-input bg-card px-3 py-2 text-sm text-foreground focus:outline-none"
               >
                 <option value={2}>Within 2 hours</option>
                 <option value={4}>Within 4 hours</option>
@@ -184,7 +184,7 @@ export function PostFoodRequestDialog({ onSuccess }: PostFoodRequestDialogProps)
               value={foodPreferences}
               onChange={(e) => setFoodPreferences(e.target.value)}
               placeholder="e.g. Cooked rice, dal, chapatis, curries"
-              className="w-full rounded-md border border-input bg-card px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none"
+              className="w-full rounded-md border border-input bg-card px-3 py-2 text-sm text-foreground focus:outline-none"
             />
           </div>
 
@@ -197,7 +197,7 @@ export function PostFoodRequestDialog({ onSuccess }: PostFoodRequestDialogProps)
               value={dietaryConstraints}
               onChange={(e) => setDietaryConstraints(e.target.value)}
               placeholder="e.g. Vegetarian only, mild spices"
-              className="w-full rounded-md border border-input bg-card px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none"
+              className="w-full rounded-md border border-input bg-card px-3 py-2 text-sm text-foregimary focus:outline-none"
             />
           </div>
 
@@ -208,13 +208,50 @@ export function PostFoodRequestDialog({ onSuccess }: PostFoodRequestDialogProps)
             <select
               value={selectedLocationId}
               onChange={(e) => setSelectedLocationId(e.target.value)}
-              className="w-full rounded-md border border-input bg-card px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none"
+              className="w-full rounded-md border border-input bg-card px-3 py-2 text-sm text-foreground focus:outline-none"
             >
-              {HYDERABAD_DEMO_LOCATIONS.map((loc) => (
-                <option key={loc.id} value={loc.id}>
-                  {loc.name} ({loc.area})
-                </option>
-              ))}
+              <optgroup label="Andhra Pradesh — Vijayawada">
+                {DEMO_LOCATIONS.filter((l) => l.city === "Vijayawada").map((loc) => (
+                  <option key={loc.id} value={loc.id}>
+                    {loc.name} ({loc.area})
+                  </option>
+                ))}
+              </optgroup>
+              <optgroup label="Andhra Pradesh — Visakhapatnam (Vizag)">
+                {DEMO_LOCATIONS.filter((l) => l.city === "Visakhapatnam").map((loc) => (
+                  <option key={loc.id} value={loc.id}>
+                    {loc.name} ({loc.area})
+                  </option>
+                ))}
+              </optgroup>
+              <optgroup label="Andhra Pradesh — Other Hubs">
+                {DEMO_LOCATIONS.filter(
+                  (l) =>
+                    l.state === "Andhra Pradesh" &&
+                    l.city !== "Vijayawada" &&
+                    l.city !== "Visakhapatnam"
+                ).map((loc) => (
+                  <option key={loc.id} value={loc.id}>
+                    {loc.name} ({loc.city})
+                  </option>
+                ))}
+              </optgroup>
+              <optgroup label="Telangana — Hyderabad">
+                {DEMO_LOCATIONS.filter((l) => l.city === "Hyderabad").map((loc) => (
+                  <option key={loc.id} value={loc.id}>
+                    {loc.name} ({loc.area})
+                  </option>
+                ))}
+              </optgroup>
+              <optgroup label="Other South Hubs (Bengaluru / Chennai)">
+                {DEMO_LOCATIONS.filter(
+                  (l) => l.state !== "Telangana" && l.state !== "Andhra Pradesh"
+                ).map((loc) => (
+                  <option key={loc.id} value={loc.id}>
+                    {loc.name} ({loc.city})
+                  </option>
+                ))}
+              </optgroup>
             </select>
           </div>
 

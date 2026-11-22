@@ -21,7 +21,12 @@ import {
 } from "@/components/ui/dialog";
 import { buttonVariants } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
-import { HYDERABAD_DEMO_LOCATIONS } from "@/lib/constants/demo-locations";
+import {
+  DEMO_LOCATIONS,
+  HYDERABAD_DEMO_LOCATIONS,
+  VIJAYAWADA_DEMO_LOCATIONS,
+  VIZAG_DEMO_LOCATIONS,
+} from "@/lib/constants/demo-locations";
 import {
   ALLERGEN_OPTIONS,
   CATEGORY_PRESETS,
@@ -51,7 +56,7 @@ export function QuickPostDialog({
   const [portions, setPortions] = useState<number>(45);
   const [weightKg, setWeightKg] = useState<string>("18.5");
   const [selectedLocationId, setSelectedLocationId] = useState(
-    HYDERABAD_DEMO_LOCATIONS[0].id
+    DEMO_LOCATIONS[0].id
   );
   const [storage, setStorage] = useState<StorageInstruction>("hot_holding");
   const [selectedAllergens, setSelectedAllergens] = useState<string[]>(["dairy"]);
@@ -62,8 +67,8 @@ export function QuickPostDialog({
   );
 
   const selectedLocation =
-    HYDERABAD_DEMO_LOCATIONS.find((loc) => loc.id === selectedLocationId) ||
-    HYDERABAD_DEMO_LOCATIONS[0];
+    DEMO_LOCATIONS.find((loc) => loc.id === selectedLocationId) ||
+    DEMO_LOCATIONS[0];
 
   const quickPresets = [
     {
@@ -450,11 +455,48 @@ export function QuickPostDialog({
               onChange={(e) => setSelectedLocationId(e.target.value)}
               className="w-full rounded-md border border-input bg-card px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none"
             >
-              {HYDERABAD_DEMO_LOCATIONS.map((loc) => (
-                <option key={loc.id} value={loc.id}>
-                  {loc.name} ({loc.area})
-                </option>
-              ))}
+              <optgroup label="Andhra Pradesh — Vijayawada">
+                {DEMO_LOCATIONS.filter((l) => l.city === "Vijayawada").map((loc) => (
+                  <option key={loc.id} value={loc.id}>
+                    {loc.name} ({loc.area})
+                  </option>
+                ))}
+              </optgroup>
+              <optgroup label="Andhra Pradesh — Visakhapatnam (Vizag)">
+                {DEMO_LOCATIONS.filter((l) => l.city === "Visakhapatnam").map((loc) => (
+                  <option key={loc.id} value={loc.id}>
+                    {loc.name} ({loc.area})
+                  </option>
+                ))}
+              </optgroup>
+              <optgroup label="Andhra Pradesh — Other Hubs">
+                {DEMO_LOCATIONS.filter(
+                  (l) =>
+                    l.state === "Andhra Pradesh" &&
+                    l.city !== "Vijayawada" &&
+                    l.city !== "Visakhapatnam"
+                ).map((loc) => (
+                  <option key={loc.id} value={loc.id}>
+                    {loc.name} ({loc.city})
+                  </option>
+                ))}
+              </optgroup>
+              <optgroup label="Telangana — Hyderabad">
+                {DEMO_LOCATIONS.filter((l) => l.city === "Hyderabad").map((loc) => (
+                  <option key={loc.id} value={loc.id}>
+                    {loc.name} ({loc.area})
+                  </option>
+                ))}
+              </optgroup>
+              <optgroup label="Other South Hubs (Bengaluru / Chennai)">
+                {DEMO_LOCATIONS.filter(
+                  (l) => l.state !== "Telangana" && l.state !== "Andhra Pradesh"
+                ).map((loc) => (
+                  <option key={loc.id} value={loc.id}>
+                    {loc.name} ({loc.city})
+                  </option>
+                ))}
+              </optgroup>
             </select>
             <p className="text-[11px] text-muted-foreground">
               Synthetic demo coordinates: {selectedLocation.latitude},{" "}

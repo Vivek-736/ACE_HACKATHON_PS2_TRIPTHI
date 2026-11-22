@@ -211,11 +211,48 @@ export function VolunteerLocationWidget({
             disabled={isUpdatingLocation}
             className="w-full rounded-xl border border-input bg-background px-3 py-2 text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
           >
-            {DEMO_LOCATIONS.map((loc: DemoLocation) => (
-              <option key={loc.name} value={loc.name}>
-                {loc.name} ({loc.area})
-              </option>
-            ))}
+            <optgroup label="Andhra Pradesh — Vijayawada">
+              {DEMO_LOCATIONS.filter((l) => l.city === "Vijayawada").map((loc: DemoLocation) => (
+                <option key={loc.name} value={loc.name}>
+                  {loc.name} ({loc.area})
+                </option>
+              ))}
+            </optgroup>
+            <optgroup label="Andhra Pradesh — Visakhapatnam (Vizag)">
+              {DEMO_LOCATIONS.filter((l) => l.city === "Visakhapatnam").map((loc: DemoLocation) => (
+                <option key={loc.name} value={loc.name}>
+                  {loc.name} ({loc.area})
+                </option>
+              ))}
+            </optgroup>
+            <optgroup label="Andhra Pradesh — Other Hubs">
+              {DEMO_LOCATIONS.filter(
+                (l) =>
+                  l.state === "Andhra Pradesh" &&
+                  l.city !== "Vijayawada" &&
+                  l.city !== "Visakhapatnam"
+              ).map((loc: DemoLocation) => (
+                <option key={loc.name} value={loc.name}>
+                  {loc.name} ({loc.city})
+                </option>
+              ))}
+            </optgroup>
+            <optgroup label="Telangana — Hyderabad">
+              {DEMO_LOCATIONS.filter((l) => l.city === "Hyderabad").map((loc: DemoLocation) => (
+                <option key={loc.name} value={loc.name}>
+                  {loc.name} ({loc.area})
+                </option>
+              ))}
+            </optgroup>
+            <optgroup label="Other South Hubs (Bengaluru / Chennai)">
+              {DEMO_LOCATIONS.filter(
+                (l) => l.state !== "Telangana" && l.state !== "Andhra Pradesh"
+              ).map((loc: DemoLocation) => (
+                <option key={loc.name} value={loc.name}>
+                  {loc.name} ({loc.city})
+                </option>
+              ))}
+            </optgroup>
           </select>
           <p className="mt-1 text-[11px] text-muted-foreground">
             Synthetic coordinates shield personal residential privacy in demo mode.
