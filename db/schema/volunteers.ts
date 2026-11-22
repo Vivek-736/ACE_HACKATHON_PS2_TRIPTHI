@@ -19,6 +19,7 @@ export const TRANSPORT_MODES = [
   "bicycle",
   "motorcycle",
   "car",
+  "delivery_truck",
   "on_foot",
 ] as const;
 export type TransportMode = (typeof TRANSPORT_MODES)[number];

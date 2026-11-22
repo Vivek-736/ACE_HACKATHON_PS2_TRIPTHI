@@ -103,6 +103,11 @@ export function estimateTravelTimeMinutes(
       avgSpeedKmh = 22;
       pickupBuffer = 5;
       break;
+    case "delivery_truck":
+    case "truck":
+      avgSpeedKmh = 20;
+      pickupBuffer = 6;
+      break;
     case "on_foot":
       avgSpeedKmh = 4.5;
       pickupBuffer = 1;

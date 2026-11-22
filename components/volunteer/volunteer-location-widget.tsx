@@ -1,13 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { DEMO_LOCATIONS, DemoLocation } from "@/lib/constants/demo-locations";
 import { TRANSPORT_MODES } from "@/db/schema/volunteers";
 import {
   Bike,
+  Car,
   CheckCircle2,
+  Footprints,
   MapPin,
   Power,
+  Truck,
+  Zap,
 } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
@@ -26,28 +31,56 @@ export function VolunteerLocationWidget({
   initialTransportMode,
   onLocationChange,
 }: VolunteerLocationWidgetProps) {
+  const router = useRouter();
+
   // Use TanStack Query Hook with optimistic status toggle & invalidation
   const { profile, toggleAvailability, isToggling } = useVolunteerAvailability();
 
-  const currentAvailability = profile?.availabilityStatus || initialAvailability;
+  // Local state for instant feedback without waiting on network hops
+  const [localAvailability, setLocalAvailability] = useState<string>(
+    profile?.availabilityStatus || initialAvailability
+  );
+
+  useEffect(() => {
+    if (profile?.availabilityStatus) {
+      setLocalAvailability(profile.availabilityStatus);
+    }
+  }, [profile?.availabilityStatus]);
+
   const [locationName, setLocationName] = useState(
     profile?.locationName || initialLocationName
   );
   const [transportMode, setTransportMode] = useState(
     profile?.transportMode || initialTransportMode
   );
+
+  useEffect(() => {
+    if (profile?.locationName) {
+      setLocationName(profile.locationName);
+    }
+    if (profile?.transportMode) {
+      setTransportMode(profile.transportMode);
+    }
+  }, [profile?.locationName, profile?.transportMode]);
+
   const [isUpdatingLocation, setIsUpdatingLocation] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
   const handleToggleDuty = async () => {
-    const nextStatus = currentAvailability === "available" ? "offline" : "available";
+    const previousStatus = localAvailability;
+    const nextStatus = previousStatus === "available" ? "offline" : "available";
+
+    // Instant local state transition (no glitch / no rollback)
+    setLocalAvailability(nextStatus);
     setMessage(null);
 
     try {
       await toggleAvailability(nextStatus);
       setMessage(`Status changed to ${nextStatus.toUpperCase()}`);
+      router.refresh();
     } catch (e) {
       console.error(e);
+      setLocalAvailability(previousStatus); // Revert on actual server failure
       setMessage("Failed to update availability status");
     }
   };
@@ -75,6 +108,7 @@ export function VolunteerLocationWidget({
       if (res.ok) {
         setMessage(`Relocated to ${loc.name}`);
         onLocationChange?.(loc.latitude, loc.longitude, loc.name);
+        router.refresh();
       }
     } catch (e) {
       console.error(e);
@@ -90,7 +124,7 @@ export function VolunteerLocationWidget({
       DEMO_LOCATIONS[0];
 
     try {
-      await fetch("/api/volunteers/location", {
+      const res = await fetch("/api/volunteers/location", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -100,6 +134,9 @@ export function VolunteerLocationWidget({
           transportMode: mode,
         }),
       });
+      if (res.ok) {
+        router.refresh();
+      }
     } catch (e) {
       console.error(e);
     }
@@ -111,7 +148,7 @@ export function VolunteerLocationWidget({
         <div className="flex items-center gap-2.5">
           <div
             className={`flex h-9 w-9 items-center justify-center rounded-xl ${
-              currentAvailability === "available"
+              localAvailability === "available"
                 ? "bg-primary/10 text-primary"
                 : "bg-muted text-muted-foreground"
             }`}
@@ -129,12 +166,12 @@ export function VolunteerLocationWidget({
               </h4>
               <span
                 className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ${
-                  currentAvailability === "available"
+                  localAvailability === "available"
                     ? "bg-primary/15 text-primary"
                     : "bg-muted text-muted-foreground"
                 }`}
               >
-                {currentAvailability.toUpperCase()}
+                {localAvailability.toUpperCase()}
               </span>
             </div>
             <p className="text-xs text-muted-foreground">
@@ -147,7 +184,7 @@ export function VolunteerLocationWidget({
           onClick={handleToggleDuty}
           disabled={isToggling || isUpdatingLocation}
           className={buttonVariants({
-            variant: currentAvailability === "available" ? "outline" : "default",
+            variant: localAvailability === "available" ? "outline" : "default",
             size: "sm",
             className: "text-xs font-semibold gap-1.5 h-8",
           })}
@@ -157,7 +194,7 @@ export function VolunteerLocationWidget({
           ) : (
             <Power className="h-3.5 w-3.5" />
           )}
-          <span>{currentAvailability === "available" ? "Go Offline" : "Go Available"}</span>
+          <span>{localAvailability === "available" ? "Go Offline" : "Go Available"}</span>
         </button>
       </div>
 
@@ -191,21 +228,48 @@ export function VolunteerLocationWidget({
             <Bike className="h-3.5 w-3.5 text-primary" />
             <span>Transport Mode (Speeds &amp; Route Calculation)</span>
           </label>
-          <div className="grid grid-cols-4 gap-1.5">
-            {TRANSPORT_MODES.map((mode) => (
-              <button
-                key={mode}
-                type="button"
-                onClick={() => handleTransportModeChange(mode)}
-                className={`rounded-lg border px-2 py-1.5 text-center text-xs font-medium capitalize transition-colors ${
-                  transportMode === mode
-                    ? "border-primary bg-primary/10 text-primary font-semibold"
-                    : "border-border bg-background text-muted-foreground hover:bg-muted"
-                }`}
-              >
-                {mode.replace("_", " ")}
-              </button>
-            ))}
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-1.5">
+            {TRANSPORT_MODES.map((mode) => {
+              const icon =
+                mode === "delivery_truck" ? (
+                  <Truck className="h-3.5 w-3.5 inline mr-1" />
+                ) : mode === "car" ? (
+                  <Car className="h-3.5 w-3.5 inline mr-1" />
+                ) : mode === "bicycle" ? (
+                  <Bike className="h-3.5 w-3.5 inline mr-1" />
+                ) : mode === "on_foot" ? (
+                  <Footprints className="h-3.5 w-3.5 inline mr-1" />
+                ) : (
+                  <Zap className="h-3.5 w-3.5 inline mr-1" />
+                );
+
+              const label =
+                mode === "delivery_truck"
+                  ? "Delivery Truck"
+                  : mode === "on_foot"
+                  ? "On Foot"
+                  : mode === "motorcycle"
+                  ? "Motorcycle"
+                  : mode === "bicycle"
+                  ? "Bicycle"
+                  : "Car";
+
+              return (
+                <button
+                  key={mode}
+                  type="button"
+                  onClick={() => handleTransportModeChange(mode)}
+                  className={`flex items-center justify-center rounded-lg border px-2 py-1.5 text-center text-xs font-medium capitalize transition-colors ${
+                    transportMode === mode
+                      ? "border-primary bg-primary/10 text-primary font-semibold"
+                      : "border-border bg-background text-muted-foreground hover:bg-muted"
+                  }`}
+                >
+                  {icon}
+                  <span>{label}</span>
+                </button>
+              );
+            })}
           </div>
           <p className="mt-1 text-[11px] text-muted-foreground">
             Adjusts speed matrix and road accessibility for pickup routes.

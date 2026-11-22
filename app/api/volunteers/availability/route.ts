@@ -53,10 +53,7 @@ export async function PATCH(request: NextRequest) {
         .returning();
     }
 
-    return apiSuccess({
-      message: `Volunteer status set to ${availabilityStatus}`,
-      profile,
-    });
+    return apiSuccess(profile);
   } catch (error) {
     console.error("Error toggling volunteer availability:", error);
     return apiError("INTERNAL_ERROR", "Failed to toggle availability", 500);
