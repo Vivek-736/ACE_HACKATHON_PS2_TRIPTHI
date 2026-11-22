@@ -1,4 +1,4 @@
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, and, or } from "drizzle-orm";
 import { db } from "@/lib/db";
 import {
   paymentRecords,
@@ -143,4 +143,47 @@ export async function getPaymentLedger() {
     .from(paymentRecords)
     .orderBy(desc(paymentRecords.createdAt))
     .limit(50);
+}
+
+/**
+ * Checks if a user has an active Pro or Enterprise subscription.
+ */
+export async function checkUserSubscription(userId: string): Promise<{
+  isPro: boolean;
+  planName: string | null;
+  subscriptionDate: Date | null;
+}> {
+  try {
+    const [activePlan] = await db
+      .select({
+        planName: paymentRecords.planName,
+        createdAt: paymentRecords.createdAt,
+      })
+      .from(paymentRecords)
+      .where(
+        and(
+          eq(paymentRecords.userId, userId),
+          eq(paymentRecords.status, "paid"),
+          or(
+            eq(paymentRecords.purpose, "donor_subscription_pro"),
+            eq(paymentRecords.purpose, "donor_subscription_enterprise")
+          )
+        )
+      )
+      .orderBy(desc(paymentRecords.createdAt))
+      .limit(1);
+
+    return {
+      isPro: Boolean(activePlan),
+      planName: activePlan?.planName || null,
+      subscriptionDate: activePlan?.createdAt || null,
+    };
+  } catch (error) {
+    console.error("[checkUserSubscription] Error:", error);
+    return {
+      isPro: false,
+      planName: null,
+      subscriptionDate: null,
+    };
+  }
 }

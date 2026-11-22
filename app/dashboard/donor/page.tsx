@@ -29,6 +29,9 @@ import { calculateHaversineDistanceKm } from "@/lib/maps/haversine";
 import { MapMarker } from "@/lib/maps/types";
 import { ROLE_MARKER_COLORS } from "@/lib/maps/map-styles";
 import { FOOD_SAFETY_DISCLAIMER } from "@/lib/constants/food-safety";
+import { checkUserSubscription } from "@/lib/payments/service";
+import { DonorProBanner } from "@/components/donor/donor-pro-banner";
+import { Sparkles, LineChart } from "lucide-react";
 
 async function DonorDashboardContent() {
   const user = await getCurrentUser();
@@ -47,6 +50,9 @@ async function DonorDashboardContent() {
 
   const orgName =
     user.organisationName || user.displayName || "Food Donor Partner";
+
+  // Check Pro subscription status
+  const subscription = await checkUserSubscription(user.id);
 
   // Donor reference coordinates (Cyber Pearl, Madhapur)
   const donorLat = 17.4483;
@@ -164,8 +170,18 @@ async function DonorDashboardContent() {
         </div>
 
         {/* Quick Post & Monetization Actions */}
-        <div className="flex items-center gap-3">
-          <SponsorshipCheckoutModal triggerButtonText="ESG & CSR Plans" />
+        <div className="flex flex-wrap items-center gap-2.5">
+          <Link
+            href="/dashboard/donor/analytics"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-xs font-semibold text-emerald-700 dark:text-emerald-400 hover:bg-emerald-500/20 transition-colors shadow-sm"
+          >
+            <LineChart className="size-3.5 text-emerald-600 dark:text-emerald-400" />
+            <span>Pro Analytics</span>
+          </Link>
+          <SponsorshipCheckoutModal
+            triggerButtonText={subscription.isPro ? "Pro Active 👑" : "Upgrade to Pro ✨"}
+            defaultPlanId="donor_subscription_pro"
+          />
           <QuickPostDialog />
         </div>
       </div>
@@ -232,6 +248,13 @@ async function DonorDashboardContent() {
           </div>
         </div>
       </div>
+
+      {/* Glowing Pro Intelligence Upgrade Banner / Status */}
+      <DonorProBanner
+        isPro={subscription.isPro}
+        planName={subscription.planName}
+        subscriptionDate={subscription.subscriptionDate}
+      />
 
       {/* Active Orders & Verification OTPs */}
       <OrderTrackingCard role="donor" userId={user.id} />
