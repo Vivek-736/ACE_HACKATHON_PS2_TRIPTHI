@@ -199,7 +199,7 @@ async function VolunteerDashboardContent() {
         <div className="rounded-xl border border-border bg-card p-5">
           <div className="flex items-center justify-between text-muted-foreground">
             <span className="text-xs font-medium">Rescue Credits</span>
-            <Award className="size-4 text-amber-600" />
+            <Award className="size-4 text-accent-foreground" />
           </div>
           <div className="mt-3">
             <div className="text-2xl font-bold text-foreground">

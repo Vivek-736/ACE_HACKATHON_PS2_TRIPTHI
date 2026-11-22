@@ -19,7 +19,7 @@ async function runMigrations() {
     process.cwd(),
     "db",
     "migrations",
-    "0003_aromatic_firelord.sql"
+    "0004_mushy_amazoness.sql"
   );
   const sqlContent = fs.readFileSync(migrationFile, "utf-8");
 
@@ -36,7 +36,8 @@ async function runMigrations() {
     } catch (err) {
       if (
         err.code === "42P07" || // relation already exists
-        err.code === "42710" // constraint already exists
+        err.code === "42710" || // constraint already exists
+        err.code === "42701" // column already exists
       ) {
         console.log(`-> Already exists (${err.code}), continuing.`);
       } else {
@@ -45,17 +46,7 @@ async function runMigrations() {
     }
   }
 
-  // Check all tables exist in information_schema
-  const tables = await sql`
-    SELECT table_name 
-    FROM information_schema.tables 
-    WHERE table_schema = 'public'
-    ORDER BY table_name;
-  `;
-  console.log(
-    "Public tables now in Neon DB:",
-    tables.map((t) => t.table_name)
-  );
+  console.log("Migration 0004 applied successfully!");
 }
 
 runMigrations().catch((err) => {

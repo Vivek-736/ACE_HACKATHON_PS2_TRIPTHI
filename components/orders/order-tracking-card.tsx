@@ -1,17 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import {
-  CheckCircle2,
   Clock,
   KeyRound,
-  MapPin,
   RefreshCw,
-  ShieldCheck,
   Truck,
-  Users,
 } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
+import { LiveStatusIndicator } from "@/components/shared/live-status-indicator";
+import { useActiveOrders } from "@/hooks/use-active-orders";
 import type { OrderStatus } from "@/db/schema/orders";
 
 interface OrderTrackingCardProps {
@@ -19,31 +16,17 @@ interface OrderTrackingCardProps {
   userId: string;
 }
 
-export function OrderTrackingCard({ role, userId }: OrderTrackingCardProps) {
-  const [orders, setOrders] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-
-  const fetchOrders = async () => {
-    try {
-      const res = await fetch("/api/rescue-orders");
-      const json = await res.json();
-      if (res.ok && json.data) {
-        setOrders(json.data);
-      }
-    } catch (err) {
-      console.error("Failed to fetch rescue orders:", err);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchOrders();
-    const interval = setInterval(fetchOrders, 12000);
-    return () => clearInterval(interval);
-  }, []);
+export function OrderTrackingCard({ role }: OrderTrackingCardProps) {
+  // Use TanStack Query Hook with 10s auto-polling, visibility pause, and instant mutation invalidation
+  const {
+    orders,
+    isLoading,
+    isError,
+    isStale,
+    lastUpdated,
+    timeAgoText,
+    refetch,
+  } = useActiveOrders();
 
   const getStatusBadge = (status: OrderStatus) => {
     switch (status) {
@@ -100,7 +83,7 @@ export function OrderTrackingCard({ role, userId }: OrderTrackingCardProps) {
 
   return (
     <div className="rounded-xl border border-border bg-card">
-      <div className="flex items-center justify-between border-b border-border p-4">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border p-4">
         <div>
           <h3 className="font-semibold text-foreground text-sm flex items-center gap-2">
             <Truck className="size-4 text-primary" />
@@ -111,20 +94,30 @@ export function OrderTrackingCard({ role, userId }: OrderTrackingCardProps) {
           </p>
         </div>
 
-        <button
-          onClick={() => {
-            setRefreshing(true);
-            fetchOrders();
-          }}
-          disabled={refreshing}
-          className="flex items-center gap-1 rounded-md border border-border bg-card px-2.5 py-1 text-xs text-foreground hover:bg-muted/30"
-        >
-          <RefreshCw className={`size-3 ${refreshing ? "animate-spin" : ""}`} />
-          <span>Refresh</span>
-        </button>
+        <div className="flex items-center gap-2">
+          <LiveStatusIndicator
+            lastUpdated={lastUpdated}
+            timeAgoText={timeAgoText}
+            isStale={isStale}
+            isError={isError}
+            isLoading={isLoading}
+            onRefresh={() => refetch()}
+            label="Live Sync"
+          />
+
+          <button
+            onClick={() => refetch()}
+            disabled={isLoading}
+            title="Refresh Orders"
+            className="flex items-center gap-1 rounded-md border border-border bg-card px-2.5 py-1 text-xs text-foreground hover:bg-muted/30"
+          >
+            <RefreshCw className={`size-3 ${isLoading ? "animate-spin" : ""}`} />
+            <span>Refresh</span>
+          </button>
+        </div>
       </div>
 
-      {loading ? (
+      {isLoading && orders.length === 0 ? (
         <div className="flex min-h-[140px] items-center justify-center gap-2 text-xs text-muted-foreground">
           <Spinner className="size-4 text-primary" />
           <span>Loading rescue orders&hellip;</span>

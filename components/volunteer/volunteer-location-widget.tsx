@@ -2,16 +2,16 @@
 
 import { useState } from "react";
 import { DEMO_LOCATIONS, DemoLocation } from "@/lib/constants/demo-locations";
-import { TRANSPORT_MODES, TransportMode } from "@/db/schema/volunteers";
+import { TRANSPORT_MODES } from "@/db/schema/volunteers";
 import {
   Bike,
   CheckCircle2,
-  Compass,
   MapPin,
   Power,
-  ShieldCheck,
 } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
+import { useVolunteerAvailability } from "@/hooks/use-volunteer-availability";
 
 interface VolunteerLocationWidgetProps {
   initialLocationName: string;
@@ -26,32 +26,29 @@ export function VolunteerLocationWidget({
   initialTransportMode,
   onLocationChange,
 }: VolunteerLocationWidgetProps) {
-  const [availability, setAvailability] = useState(initialAvailability);
-  const [locationName, setLocationName] = useState(initialLocationName);
-  const [transportMode, setTransportMode] = useState(initialTransportMode);
-  const [isUpdating, setIsUpdating] = useState(false);
+  // Use TanStack Query Hook with optimistic status toggle & invalidation
+  const { profile, toggleAvailability, isToggling } = useVolunteerAvailability();
+
+  const currentAvailability = profile?.availabilityStatus || initialAvailability;
+  const [locationName, setLocationName] = useState(
+    profile?.locationName || initialLocationName
+  );
+  const [transportMode, setTransportMode] = useState(
+    profile?.transportMode || initialTransportMode
+  );
+  const [isUpdatingLocation, setIsUpdatingLocation] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
-  const toggleAvailability = async () => {
-    const nextStatus = availability === "available" ? "offline" : "available";
-    setIsUpdating(true);
+  const handleToggleDuty = async () => {
+    const nextStatus = currentAvailability === "available" ? "offline" : "available";
     setMessage(null);
 
     try {
-      const res = await fetch("/api/volunteers/availability", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ availabilityStatus: nextStatus }),
-      });
-
-      if (res.ok) {
-        setAvailability(nextStatus);
-        setMessage(`Status changed to ${nextStatus.toUpperCase()}`);
-      }
+      await toggleAvailability(nextStatus);
+      setMessage(`Status changed to ${nextStatus.toUpperCase()}`);
     } catch (e) {
       console.error(e);
-    } finally {
-      setIsUpdating(false);
+      setMessage("Failed to update availability status");
     }
   };
 
@@ -60,7 +57,7 @@ export function VolunteerLocationWidget({
     if (!loc) return;
 
     setLocationName(loc.name);
-    setIsUpdating(true);
+    setIsUpdatingLocation(true);
     setMessage(null);
 
     try {
@@ -82,7 +79,7 @@ export function VolunteerLocationWidget({
     } catch (e) {
       console.error(e);
     } finally {
-      setIsUpdating(false);
+      setIsUpdatingLocation(false);
     }
   };
 
@@ -114,26 +111,30 @@ export function VolunteerLocationWidget({
         <div className="flex items-center gap-2.5">
           <div
             className={`flex h-9 w-9 items-center justify-center rounded-xl ${
-              availability === "available"
-                ? "bg-emerald-500/10 text-emerald-600"
+              currentAvailability === "available"
+                ? "bg-primary/10 text-primary"
                 : "bg-muted text-muted-foreground"
             }`}
           >
-            <Power className="h-4 w-4" />
+            {isToggling ? (
+              <Spinner className="h-4 w-4 text-primary" />
+            ) : (
+              <Power className="h-4 w-4" />
+            )}
           </div>
           <div>
             <div className="flex items-center gap-2">
               <h4 className="text-sm font-bold text-foreground">
-                Duty Status & Dispatch Staging
+                Duty Status &amp; Dispatch Staging
               </h4>
               <span
                 className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ${
-                  availability === "available"
-                    ? "bg-emerald-500/15 text-emerald-700"
+                  currentAvailability === "available"
+                    ? "bg-primary/15 text-primary"
                     : "bg-muted text-muted-foreground"
                 }`}
               >
-                {availability.toUpperCase()}
+                {currentAvailability.toUpperCase()}
               </span>
             </div>
             <p className="text-xs text-muted-foreground">
@@ -143,16 +144,20 @@ export function VolunteerLocationWidget({
         </div>
 
         <button
-          onClick={toggleAvailability}
-          disabled={isUpdating}
+          onClick={handleToggleDuty}
+          disabled={isToggling || isUpdatingLocation}
           className={buttonVariants({
-            variant: availability === "available" ? "outline" : "default",
+            variant: currentAvailability === "available" ? "outline" : "default",
             size: "sm",
             className: "text-xs font-semibold gap-1.5 h-8",
           })}
         >
-          <Power className="h-3.5 w-3.5" />
-          <span>{availability === "available" ? "Go Offline" : "Go Available"}</span>
+          {isToggling ? (
+            <Spinner className="h-3.5 w-3.5" />
+          ) : (
+            <Power className="h-3.5 w-3.5" />
+          )}
+          <span>{currentAvailability === "available" ? "Go Offline" : "Go Available"}</span>
         </button>
       </div>
 
@@ -166,7 +171,7 @@ export function VolunteerLocationWidget({
           <select
             value={locationName}
             onChange={(e) => handleLocationSelect(e.target.value)}
-            disabled={isUpdating}
+            disabled={isUpdatingLocation}
             className="w-full rounded-xl border border-input bg-background px-3 py-2 text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
           >
             {DEMO_LOCATIONS.map((loc: DemoLocation) => (
@@ -184,7 +189,7 @@ export function VolunteerLocationWidget({
         <div>
           <label className="text-xs font-semibold text-foreground flex items-center gap-1.5 mb-1.5">
             <Bike className="h-3.5 w-3.5 text-primary" />
-            <span>Transport Mode (Speeds & Route Calculation)</span>
+            <span>Transport Mode (Speeds &amp; Route Calculation)</span>
           </label>
           <div className="grid grid-cols-4 gap-1.5">
             {TRANSPORT_MODES.map((mode) => (
@@ -209,7 +214,7 @@ export function VolunteerLocationWidget({
       </div>
 
       {message && (
-        <div className="flex items-center gap-1.5 rounded-lg bg-emerald-500/10 px-3 py-1.5 text-xs font-medium text-emerald-700">
+        <div className="flex items-center gap-1.5 rounded-lg bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary">
           <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
           <span>{message}</span>
         </div>
