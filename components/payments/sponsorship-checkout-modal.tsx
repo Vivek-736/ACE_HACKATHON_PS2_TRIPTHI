@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/dialog";
 import { buttonVariants } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
-import { MONETIZATION_PLANS, PlanTier } from "@/lib/payments/service";
+import { MONETIZATION_PLANS, PlanTier } from "@/lib/payments/plans";
 
 interface SponsorshipCheckoutModalProps {
   triggerButtonText?: string;
@@ -111,25 +111,28 @@ export function SponsorshipCheckoutModal({
         <span>{triggerButtonText}</span>
       </DialogTrigger>
 
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <div className="flex items-center gap-2">
-            <span className="rounded-md bg-primary/10 p-1.5 text-primary">
+      <DialogContent
+        style={{ maxWidth: "1180px", width: "95vw" }}
+        className="p-6 sm:p-8 overflow-hidden rounded-2xl bg-card border border-border shadow-2xl"
+      >
+        <DialogHeader className="mb-3">
+          <div className="flex items-center gap-3">
+            <span className="rounded-xl bg-primary/10 p-2.5 text-primary shrink-0 ring-1 ring-primary/20">
               <HeartHandshake className="size-5" />
             </span>
             <div>
-              <DialogTitle className="text-lg font-bold text-foreground">
+              <DialogTitle className="text-xl font-bold tracking-tight text-foreground">
                 Tripti Commercial Monetization &amp; CSR Sponsorship
               </DialogTitle>
-              <DialogDescription className="text-xs text-muted-foreground">
-                Always 100% free for NGOs and community receivers. Supported by B2B ESG subscriptions and CSR logistics funds.
+              <DialogDescription className="text-xs text-muted-foreground mt-0.5">
+                Always 100% free for NGOs and community receivers. Subsidized by B2B ESG analytics and corporate CSR logistics funds.
               </DialogDescription>
             </div>
           </div>
         </DialogHeader>
 
         {successReceipt ? (
-          <div className="space-y-4 rounded-xl border border-primary/40 bg-primary/5 p-6 text-center">
+          <div className="space-y-4 rounded-xl border border-primary/40 bg-primary/5 p-6 text-center max-w-lg mx-auto">
             <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-primary/15 text-primary">
               <CheckCircle2 className="size-6" />
             </div>
@@ -179,49 +182,79 @@ export function SponsorshipCheckoutModal({
           </div>
         ) : (
           <div className="space-y-5">
-            {/* Plan selection grid */}
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            {/* Plan selection 4-column spacious grid */}
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {MONETIZATION_PLANS.map((plan) => {
                 const isSelected = plan.id === selectedPlanId;
+                const categoryBadge =
+                  plan.category === "csr_sponsorship"
+                    ? "CSR Fund"
+                    : plan.category === "priority_fee"
+                    ? "On-Demand"
+                    : "B2B SaaS";
+
                 return (
                   <div
                     key={plan.id}
                     onClick={() => setSelectedPlanId(plan.id)}
-                    className={`cursor-pointer rounded-xl border p-4 transition-all ${
+                    className={`flex flex-col justify-between cursor-pointer rounded-xl border p-4.5 transition-all relative ${
                       isSelected
-                        ? "border-primary bg-primary/5 ring-2 ring-primary/20"
-                        : "border-border bg-card hover:border-primary/40"
+                        ? "border-primary bg-primary/5 ring-2 ring-primary/30 shadow-sm"
+                        : "border-border bg-card hover:border-primary/40 hover:bg-muted/15"
                     }`}
                   >
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-foreground">
-                        {plan.name}
-                      </span>
-                      {plan.popular && (
-                        <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-primary">
-                          Popular
+                    <div>
+                      {/* Badge row */}
+                      <div className="flex items-center justify-between gap-2 mb-2">
+                        <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground tracking-wide">
+                          {categoryBadge}
                         </span>
-                      )}
+                        {plan.popular ? (
+                          <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-primary">
+                            Popular
+                          </span>
+                        ) : (
+                          <div
+                            className={`size-4 rounded-full border flex items-center justify-center ${
+                              isSelected
+                                ? "border-primary"
+                                : "border-muted-foreground/30"
+                            }`}
+                          >
+                            {isSelected && (
+                              <div className="size-2 rounded-full bg-primary" />
+                            )}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Plan title */}
+                      <h4 className="text-sm font-bold text-foreground leading-tight">
+                        {plan.name}
+                      </h4>
+
+                      {/* Price */}
+                      <div className="mt-2.5 flex items-baseline gap-1">
+                        <span className="text-2xl font-extrabold text-foreground tracking-tight">
+                          {plan.priceDisplay}
+                        </span>
+                        <span className="text-[11px] text-muted-foreground">
+                          /{plan.billingPeriod}
+                        </span>
+                      </div>
+
+                      {/* Tagline */}
+                      <p className="mt-2 text-xs text-muted-foreground leading-relaxed min-h-[38px]">
+                        {plan.tagline}
+                      </p>
                     </div>
 
-                    <div className="mt-2">
-                      <span className="text-xl font-extrabold text-foreground">
-                        {plan.priceDisplay}
-                      </span>
-                      <span className="text-[11px] text-muted-foreground ml-1">
-                        /{plan.billingPeriod}
-                      </span>
-                    </div>
-
-                    <p className="mt-1 text-[11px] text-muted-foreground line-clamp-2">
-                      {plan.tagline}
-                    </p>
-
-                    <div className="mt-3 space-y-1 border-t border-border/60 pt-2 text-[11px] text-muted-foreground">
+                    {/* Features list */}
+                    <div className="mt-3.5 space-y-2 border-t border-border/60 pt-3 text-xs text-muted-foreground">
                       {plan.features.slice(0, 3).map((f, i) => (
-                        <div key={i} className="flex items-center gap-1.5">
-                          <Check className="size-3 text-primary shrink-0" />
-                          <span className="truncate">{f}</span>
+                        <div key={i} className="flex items-start gap-2">
+                          <Check className="size-3.5 text-primary shrink-0 mt-0.5" />
+                          <span className="leading-snug">{f}</span>
                         </div>
                       ))}
                     </div>
@@ -230,38 +263,39 @@ export function SponsorshipCheckoutModal({
               })}
             </div>
 
-            {/* Simulated Mode Banner */}
-            <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/30 p-3 text-xs text-muted-foreground">
-              <ShieldCheck className="size-4 text-primary shrink-0" />
-              <span>
-                <strong>Test Mode Active:</strong> Razorpay test simulation enables instant checkout demonstration without real financial debit.
-              </span>
-            </div>
-
-            {/* Action buttons */}
-            <div className="flex items-center justify-end gap-3 pt-2">
-              <button
-                type="button"
-                onClick={() => setOpen(false)}
-                className="rounded-md border border-border px-4 py-2 text-xs font-medium text-muted-foreground hover:bg-muted/30"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                disabled={processing}
-                onClick={handleCheckout}
-                className={`${buttonVariants({ size: "default" })} gap-1.5`}
-              >
-                {processing ? (
-                  <Spinner className="size-4" />
-                ) : (
-                  <CreditCard className="size-4" />
-                )}
+            {/* Bottom Controls Row: Test mode note + Actions */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2 border-t border-border/60">
+              <div className="flex items-center gap-2 rounded-lg bg-muted/40 px-3.5 py-2 text-xs text-muted-foreground">
+                <ShieldCheck className="size-4 text-primary shrink-0" />
                 <span>
-                  Confirm {selectedPlan.priceDisplay} ({selectedPlan.name})
+                  <strong>Test Mode Active:</strong> Razorpay simulation enabled without real card debit.
                 </span>
-              </button>
+              </div>
+
+              <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
+                <button
+                  type="button"
+                  onClick={() => setOpen(false)}
+                  className="rounded-md border border-border px-4 py-2 text-xs font-medium text-muted-foreground hover:bg-muted/30 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  disabled={processing}
+                  onClick={handleCheckout}
+                  className={`${buttonVariants({ size: "default" })} gap-1.5 text-xs px-5`}
+                >
+                  {processing ? (
+                    <Spinner className="size-4" />
+                  ) : (
+                    <CreditCard className="size-4" />
+                  )}
+                  <span>
+                    Confirm {selectedPlan.priceDisplay} &bull; {selectedPlan.name}
+                  </span>
+                </button>
+              </div>
             </div>
           </div>
         )}
