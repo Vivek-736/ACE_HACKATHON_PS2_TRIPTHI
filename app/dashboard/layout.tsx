@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { UserButton } from "@clerk/nextjs";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { Spinner } from "@/components/ui/spinner";
+import { NotificationBell } from "@/components/notifications/notification-bell";
 
 const ROLE_BADGE_LABELS: Record<string, string> = {
   donor: "Food Donor",
@@ -67,13 +68,14 @@ export default function DashboardLayout({
             </Suspense>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             <Link
               href="/"
-              className="rounded-md text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
+              className="rounded-md text-xs font-medium text-muted-foreground transition-colors hover:text-foreground hidden sm:inline-block"
             >
               Public Site
             </Link>
+            <NotificationBell />
             <UserButton
               appearance={{
                 elements: {

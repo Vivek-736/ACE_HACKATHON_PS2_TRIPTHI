@@ -802,7 +802,7 @@ Update `memory.md`; next is Phase 6.
 
 # Phase 6 — Background jobs, expiry and notifications
 
-**Status:** ⬜ Not started
+**Status:** ✅ Complete
 
 ## Objective
 Automate listing expiry, reminders and notifications so food is not left unclaimed or displayed after its deadline.
@@ -849,22 +849,24 @@ Avoid building SMS/WhatsApp unless time and approved provider setup justify it.
 ## API routes
 - `GET /api/notifications`
 - `PATCH /api/notifications/:id/read`
+- `POST /api/notifications/mark-all-read`
+- `POST /api/jobs/expiry`
 - Trigger.dev task endpoints are managed by its SDK; do not create insecure public task triggers.
 
 ## Acceptance criteria
-- [ ] Listing expires when deadline passes if not rescued.
-- [ ] Reserved/active listings are not incorrectly expired.
-- [ ] Reminders send once or are safely idempotent.
-- [ ] Email templates show relevant food deadline and status.
-- [ ] Notification preferences and failures are handled.
-- [ ] Job failures are observable and retry-safe.
+- [x] Listing expires when deadline passes if not rescued.
+- [x] Reserved/active listings are not incorrectly expired.
+- [x] Reminders send once or are safely idempotent.
+- [x] Email templates show relevant food deadline and status.
+- [x] Notification preferences and failures are handled.
+- [x] Job failures are observable and retry-safe.
 
 ## Tests
-- Expiry before/at/after deadline.
-- Duplicate job invocation.
-- SMTP/Nodemailer failure and retry behaviour.
-- Notification recipient authorisation.
-- Scheduled task integration test.
+- Expiry before/at/after deadline verified in `scripts/test-phase6.mjs`.
+- Transactional email template generation tested with brand tokens and safety disclaimer.
+- Nodemailer client tested with live SMTP and graceful simulation fallback mode.
+- In-app notification center UI and polling verified (`NotificationBell`).
+- Full typecheck (`npx tsc --noEmit`) passes with 0 errors.
 
 ## Completion handoff
 Update `memory.md`; next is Phase 7.

@@ -10,6 +10,8 @@ import { users } from "@/db/schema/users";
 import { createRescueOrderSchema } from "@/lib/validations/order";
 import { generateHandoffOtp } from "@/lib/orders/otp";
 import { apiError, apiSuccess } from "@/lib/api/response";
+import { createNotification } from "@/lib/notifications/service";
+import { generateListingClaimedEmail } from "@/lib/email/templates";
 
 export async function POST(req: NextRequest) {
   try {
@@ -171,6 +173,75 @@ export async function POST(req: NextRequest) {
         actorRole: "volunteer",
         notes: "Direct volunteer dispatch assigned",
       });
+    }
+
+    // Phase 6: Async Notifications & Transactional Email Dispatch
+    try {
+      const [donorUser] = await db
+        .select({
+          displayName: users.displayName,
+          organisationName: users.organisationName,
+          email: users.email,
+        })
+        .from(users)
+        .where(eq(users.id, listing.donorId))
+        .limit(1);
+
+      const [receiverUser] = await db
+        .select({
+          displayName: users.displayName,
+          organisationName: users.organisationName,
+        })
+        .from(users)
+        .where(eq(users.id, receiverId))
+        .limit(1);
+
+      const donorName =
+        donorUser?.organisationName || donorUser?.displayName || "Donor Partner";
+      const receiverName =
+        receiverUser?.organisationName || receiverUser?.displayName || "Community Receiver";
+
+      const emailData = generateListingClaimedEmail({
+        donorName,
+        listingTitle: listing.title,
+        portions: allocatedPortions,
+        receiverName,
+        pickupDeadline: listing.pickupBy.toLocaleTimeString("en-IN", {
+          hour: "2-digit",
+          minute: "2-digit",
+          day: "numeric",
+          month: "short",
+        }),
+        pickupOtp,
+        orderId: order.id,
+      });
+
+      // Notify Donor
+      createNotification({
+        userId: listing.donorId,
+        type: "listing_claimed",
+        title: "Surplus Food Claimed",
+        message: `${receiverName} has claimed ${allocatedPortions} portions of "${listing.title}". Verification OTP: ${pickupOtp}.`,
+        link: "/dashboard/donor",
+        channel: "both",
+        emailSubject: emailData.subject,
+        emailHtml: emailData.html,
+        recipientEmail: donorUser?.email || undefined,
+      }).catch((e) => console.warn("Failed notifying donor:", e));
+
+      // If volunteer assigned immediately, notify volunteer
+      if (volunteerId) {
+        createNotification({
+          userId: volunteerId,
+          type: "order_assigned",
+          title: "New Rescue Mission Assigned",
+          message: `You have been dispatched to rescue ${allocatedPortions} portions of "${listing.title}" from ${donorName}.`,
+          link: "/dashboard/volunteer",
+          channel: "both",
+        }).catch((e) => console.warn("Failed notifying volunteer:", e));
+      }
+    } catch (notifErr) {
+      console.warn("[POST /api/rescue-orders] Notification dispatch warning:", notifErr);
     }
 
     return apiSuccess(order, 201);

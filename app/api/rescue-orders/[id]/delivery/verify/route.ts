@@ -5,8 +5,11 @@ import { db } from "@/lib/db";
 import { rescueOrders, deliveryEvents } from "@/db/schema/orders";
 import { foodListings } from "@/db/schema/listings";
 import { volunteerProfiles } from "@/db/schema/volunteers";
+import { users } from "@/db/schema/users";
 import { verifyHandoffOtp } from "@/lib/orders/otp";
 import { apiError, apiSuccess } from "@/lib/api/response";
+import { createNotification } from "@/lib/notifications/service";
+import { generateDeliveryCompletedEmail } from "@/lib/email/templates";
 
 export async function POST(
   req: NextRequest,
@@ -145,6 +148,117 @@ export async function POST(
       actorRole: "volunteer",
       notes: notes || "Food delivery verified via 4-digit receiver OTP handshake",
     });
+
+    // Phase 6: Notify Donor, Receiver, and Volunteer with verified impact metrics
+    try {
+      const [listing] = await db
+        .select({
+          donorId: foodListings.donorId,
+          title: foodListings.title,
+        })
+        .from(foodListings)
+        .where(eq(foodListings.id, order.listingId))
+        .limit(1);
+
+      const [donorUser] = listing
+        ? await db
+            .select({
+              displayName: users.displayName,
+              organisationName: users.organisationName,
+              email: users.email,
+            })
+            .from(users)
+            .where(eq(users.id, listing.donorId))
+            .limit(1)
+        : [null];
+
+      const [receiverUser] = await db
+        .select({
+          displayName: users.displayName,
+          organisationName: users.organisationName,
+          email: users.email,
+        })
+        .from(users)
+        .where(eq(users.id, order.receiverId))
+        .limit(1);
+
+      const donorName =
+        donorUser?.organisationName || donorUser?.displayName || "Donor Partner";
+      const receiverName =
+        receiverUser?.organisationName || receiverUser?.displayName || "Community Receiver";
+
+      // Impact assumptions: 1 portion = 1 meal; 1 portion ≈ 0.4 kg food = 1.0 kg CO2e avoided from landfill
+      const mealsSaved = order.allocatedPortions;
+      const co2eAvoided = Number((order.allocatedPortions * 0.4 * 2.5).toFixed(1));
+
+      // Donor email & notification
+      if (listing && donorUser) {
+        const donorEmail = generateDeliveryCompletedEmail({
+          recipientName: donorName,
+          isDonor: true,
+          listingTitle: listing.title,
+          portions: order.allocatedPortions,
+          mealsSaved,
+          co2eKgAvoided: co2eAvoided,
+          receiverName,
+          donorName,
+          orderId: order.id,
+        });
+
+        createNotification({
+          userId: listing.donorId,
+          type: "food_delivered",
+          title: "Surplus Food Delivered! 🎯",
+          message: `Your donation of "${listing.title}" reached ${receiverName}. You saved ${mealsSaved} meals and avoided ~${co2eAvoided} kg CO₂e!`,
+          link: "/dashboard/donor",
+          channel: "both",
+          emailSubject: donorEmail.subject,
+          emailHtml: donorEmail.html,
+          recipientEmail: donorUser.email || undefined,
+        }).catch((e) => console.warn("Failed notifying donor of delivery:", e));
+      }
+
+      // Receiver email & notification
+      if (receiverUser) {
+        const receiverEmail = generateDeliveryCompletedEmail({
+          recipientName: receiverName,
+          isDonor: false,
+          listingTitle: listing?.title || "Food Rescue",
+          portions: order.allocatedPortions,
+          mealsSaved,
+          co2eKgAvoided: co2eAvoided,
+          receiverName,
+          donorName,
+          orderId: order.id,
+        });
+
+        createNotification({
+          userId: order.receiverId,
+          type: "food_delivered",
+          title: "Food Delivery Received! 🍲",
+          message: `Verified delivery of ${order.allocatedPortions} portions of "${listing?.title || "Food Rescue"}" from ${donorName}.`,
+          link: "/dashboard/receiver",
+          channel: "both",
+          emailSubject: receiverEmail.subject,
+          emailHtml: receiverEmail.html,
+          recipientEmail: receiverUser.email || undefined,
+        }).catch((e) => console.warn("Failed notifying receiver of delivery:", e));
+      }
+
+      // Volunteer notification: +50 Rescue Credits
+      if (order.volunteerId) {
+        createNotification({
+          userId: order.volunteerId,
+          type: "food_delivered",
+          title: "Mission Complete! +50 Credits 🌟",
+          message: `You delivered ${order.allocatedPortions} portions safely to ${receiverName}. 50 Rescue Credits added to your profile!`,
+          link: "/dashboard/volunteer",
+          channel: "in_app",
+        }).catch((e) => console.warn("Failed notifying volunteer of completed delivery:", e));
+      }
+    } catch (notifErr) {
+      console.warn("[POST delivery verify] Notification warning:", notifErr);
+    }
 
     return apiSuccess({
       order: updatedOrder,
