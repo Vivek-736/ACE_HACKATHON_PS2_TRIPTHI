@@ -49,6 +49,8 @@
 }
 
 :root {
+  --font-sans: "Roboto Condensed", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-roboto-condensed: var(--font-sans);
   --background: oklch(0.985 0.008 85);
   --foreground: oklch(0.27 0.03 150);
   --card: oklch(0.985 0.008 85);
@@ -122,10 +124,12 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans;
+    font-family: var(--font-sans), "Roboto Condensed", sans-serif;
   }
   html {
     @apply font-sans;
+    font-family: var(--font-sans), "Roboto Condensed", sans-serif;
   }
 }
 
