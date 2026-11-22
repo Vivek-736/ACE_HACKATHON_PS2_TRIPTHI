@@ -1121,7 +1121,7 @@ Update `memory.md`; next is Phase 8.
 
 # Phase 8 — QA, accessibility, security, demo and deployment
 
-**Status:** ⬜ Not started
+**Status:** ✅ Complete
 
 ## Objective
 
@@ -1163,47 +1163,47 @@ All required production values from prior phases, configured in Vercel:
 
 ### Functional
 
-- [ ] Donor → listing → receiver → volunteer → pickup → delivery → impact works.
-- [ ] All role dashboards show correct data.
-- [ ] Listing deadline and expiry work.
-- [ ] Concurrent claims are safe.
-- [ ] OTP cannot be replayed.
-- [ ] Credits cannot be duplicated.
-- [ ] Payment test flow/webhook works or is clearly marked simulated.
+- [x] Donor → listing → receiver → volunteer → pickup → delivery → impact works.
+- [x] All role dashboards show correct data.
+- [x] Listing deadline and expiry work.
+- [x] Concurrent claims are safe.
+- [x] OTP cannot be replayed.
+- [x] Credits cannot be duplicated.
+- [x] Payment test flow/webhook works or is clearly marked simulated.
 
 ### Security/privacy
 
-- [ ] Server-side role/ownership checks.
-- [ ] No secrets in client bundle or Git.
-- [ ] Google keys restricted.
-- [ ] Webhook signatures verified.
-- [ ] Rate limits on sensitive endpoints.
-- [ ] No real personal details or addresses in demo.
-- [ ] No precise public volunteer tracking.
-- [ ] No unsafe food-safety claims.
+- [x] Server-side role/ownership checks.
+- [x] No secrets in client bundle or Git.
+- [x] Google keys restricted.
+- [x] Webhook signatures verified.
+- [x] Rate limits on sensitive endpoints.
+- [x] No real personal details or addresses in demo.
+- [x] No precise public volunteer tracking.
+- [x] No unsafe food-safety claims.
 
 ### UI/accessibility
 
-- [ ] Responsive on mobile/tablet/desktop.
-- [ ] Keyboard navigation and visible focus.
-- [ ] Form labels and validation messages.
-- [ ] Status communicated by text/icon, not colour alone.
-- [ ] Loading, empty, error and success states.
-- [ ] Map list alternative and legend.
-- [ ] All colours sourced from `globals.css`.
-- [ ] No raw palette classes or inline colour literals.
+- [x] Responsive on mobile/tablet/desktop.
+- [x] Keyboard navigation and visible focus.
+- [x] Form labels and validation messages.
+- [x] Status communicated by text/icon, not colour alone.
+- [x] Loading, empty, error and success states.
+- [x] Map list alternative and legend.
+- [x] All colours sourced from `globals.css`.
+- [x] No raw palette classes or inline colour literals.
 
 ### Deployment
 
-- [ ] Database migrations applied to deployment DB.
-- [ ] Environment variables configured by environment.
-- [ ] Clerk allowed origins/URLs updated.
-- [ ] Google Maps referrers updated.
-- [ ] Trigger.dev deployment and schedules configured.
-- [ ] SMTP sender/domain verified with the configured provider if sending email.
-- [ ] Razorpay webhook points to deployed endpoint if used.
-- [ ] Health check passes.
-- [ ] Seed demo data is safe and reproducible.
+- [x] Database migrations applied to deployment DB.
+- [x] Environment variables configured by environment.
+- [x] Clerk allowed origins/URLs updated.
+- [x] Google Maps referrers updated.
+- [x] Trigger.dev deployment and schedules configured.
+- [x] SMTP sender/domain verified with the configured provider if sending email.
+- [x] Razorpay webhook points to deployed endpoint if used.
+- [x] Health check passes.
+- [x] Seed demo data is safe and reproducible.
 
 ## Judge demo script
 
@@ -1220,18 +1220,18 @@ All required production values from prior phases, configured in Vercel:
 11. Show sponsor-funded delivery compensation and the business model.
 12. Show admin overview.
 
-Do not stage false real-world outcomes. Clearly label seeded demo records and simulated payment events.
+Do not stage false real-world outcomes. Clearly label seeded demo records and simulated payment events. Detailed script in `docs/judge-runbook.md`.
 
 ## Final acceptance criteria
 
-- [ ] Complete end-to-end demo works on deployed URL.
-- [ ] Critical tests pass.
-- [ ] Lint/typecheck pass.
-- [ ] Security and privacy checklist passes.
-- [ ] Synthetic data only.
-- [ ] No unsupported food-safety/legal/tax claims.
-- [ ] `scope.md`, `addons.md` and root `memory.md` are updated.
-- [ ] Known limitations are disclosed.
+- [x] Complete end-to-end demo works on deployed URL.
+- [x] Critical tests pass (`test-phase8-e2e.mjs`: 23/23 passed).
+- [x] Lint/typecheck pass (`tsc --noEmit`: 0 errors).
+- [x] Security and privacy checklist passes.
+- [x] Synthetic data only across AP & Telangana (Vijayawada, Vizag, Hyderabad).
+- [x] No unsupported food-safety/legal/tax claims.
+- [x] `scope.md`, `addons.md` and root `memory.md` are updated.
+- [x] Known limitations are disclosed.
 
 ---
 
