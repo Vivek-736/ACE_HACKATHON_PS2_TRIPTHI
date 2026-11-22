@@ -17,7 +17,11 @@ export function useVolunteerAvailability() {
       if (!res.ok) {
         throw new Error(json?.error?.message || "Failed to load volunteer profile");
       }
-      return json.data;
+      const raw = json.data;
+      if (raw && typeof raw === "object" && "profile" in raw && raw.profile) {
+        return raw.profile as VolunteerProfile;
+      }
+      return raw as VolunteerProfile;
     },
     {
       pollingIntervalMs: 12 * 1000,
@@ -36,7 +40,11 @@ export function useVolunteerAvailability() {
       if (!res.ok) {
         throw new Error(json?.error?.message || "Failed to update availability");
       }
-      return json.data;
+      const raw = json.data;
+      if (raw && typeof raw === "object" && "profile" in raw && raw.profile) {
+        return raw.profile as VolunteerProfile;
+      }
+      return raw as VolunteerProfile;
     },
     onMutate: async (targetStatus) => {
       // Optimistic update
@@ -53,6 +61,11 @@ export function useVolunteerAvailability() {
       }
 
       return { previous };
+    },
+    onSuccess: (updatedProfile) => {
+      if (updatedProfile) {
+        queryClient.setQueryData(queryKeys.volunteers.profile(), updatedProfile);
+      }
     },
     onError: (_err, _target, context) => {
       if (context?.previous) {

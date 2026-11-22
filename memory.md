@@ -44,6 +44,8 @@
   - Updated `components/volunteer/volunteer-order-console.tsx` to use `useActiveOrders`, replace manual `setInterval`, integrate `LiveStatusIndicator`, and trigger dedicated `/pickup/verify` and `/delivery/verify` endpoints.
   - Updated `components/orders/order-tracking-card.tsx` to use `useActiveOrders` with `LiveStatusIndicator`.
   - Updated `components/volunteer/volunteer-location-widget.tsx` to use `useVolunteerAvailability` with optimistic toggle and strict adherence to semantic color tokens.
+  - Added `delivery_truck` to `TRANSPORT_MODES` in `db/schema/volunteers.ts` and `lib/maps/haversine.ts`, updating the volunteer dashboard widget with a dedicated `Truck` icon and responsive 5-column layout.
+  - Resolved availability toggle momentary rollback issue by unwrapping nested API payloads (`json.data?.profile ?? json.data`) in `hooks/use-volunteer-availability.ts` and harmonizing API return contracts in `/api/volunteers/profile` and `/api/volunteers/availability`.
 
 ### 2. Previous Phases (Phases 0 - 4)
 - **Phase 0:** Foundation, sustainability design tokens in `app/globals.css`, Neon database & Drizzle ORM.

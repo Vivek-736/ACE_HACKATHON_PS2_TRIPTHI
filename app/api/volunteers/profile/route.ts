@@ -40,7 +40,7 @@ export async function GET() {
         .returning();
     }
 
-    return apiSuccess({ profile });
+    return apiSuccess(profile);
   } catch (error) {
     console.error("Error retrieving volunteer profile:", error);
     return apiError("INTERNAL_ERROR", "Failed to get volunteer profile", 500);
