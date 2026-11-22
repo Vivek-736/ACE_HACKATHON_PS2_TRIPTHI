@@ -22,6 +22,14 @@ interface CreditStatementData {
   transactions: RescueCreditTransaction[];
 }
 
+function formatTxDescription(desc: string): string {
+  // Replace long 36-character raw UUIDs with a concise mission ID for compact display
+  return desc.replace(
+    /rescue mission ([0-9a-f]{8})-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi,
+    "rescue mission #$1"
+  );
+}
+
 export function VolunteerCreditsCard() {
   const [data, setData] = useState<CreditStatementData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -131,17 +139,17 @@ export function VolunteerCreditsCard() {
             Complete your first verified delivery to earn +50 Rescue Credits.
           </div>
         ) : (
-          <div className="divide-y divide-border rounded-xl border border-border overflow-hidden">
+          <div className="divide-y divide-border rounded-xl border overflow-hidden">
             {data.transactions.map((tx) => (
               <div
                 key={tx.id}
-                className="flex items-center justify-between p-3 text-xs hover:bg-muted/10 transition-colors"
+                className="flex items-start sm:items-center justify-between gap-3 p-3 text-xs hover:bg-muted/10 transition-colors"
               >
-                <div className="space-y-0.5">
-                  <div className="font-semibold text-foreground">
-                    {tx.description}
+                <div className="min-w-0 space-y-0.5">
+                  <div className="font-semibold text-foreground text-xs sm:text-sm leading-snug wrap-break-word">
+                    {formatTxDescription(tx.description)}
                   </div>
-                  <div className="text-[10px] text-muted-foreground flex items-center gap-2">
+                  <div className="text-[10px] sm:text-[11px] text-muted-foreground flex items-center gap-1.5 flex-wrap">
                     <span className="capitalize">{tx.type.replace(/_/g, " ")}</span>
                     <span>&bull;</span>
                     <span>
@@ -155,15 +163,15 @@ export function VolunteerCreditsCard() {
                   </div>
                 </div>
 
-                <div className="text-right">
+                <div className="text-right shrink-0">
                   <span
-                    className={`font-mono font-bold ${
+                    className={`font-mono font-bold text-xs sm:text-sm ${
                       tx.amount >= 0 ? "text-primary" : "text-destructive"
                     }`}
                   >
                     {tx.amount >= 0 ? `+${tx.amount}` : tx.amount}
                   </span>
-                  <div className="text-[10px] text-muted-foreground">
+                  <div className="text-[10px] sm:text-[11px] text-muted-foreground">
                     Bal: {tx.balanceAfter}
                   </div>
                 </div>

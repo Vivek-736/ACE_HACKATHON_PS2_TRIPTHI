@@ -227,10 +227,10 @@ export function SponsorshipCheckoutModal({
         <DialogTrigger
           className={
             className ||
-            `${buttonVariants({ variant: "outline", size: "sm" })} gap-1.5 text-xs`
+            `${buttonVariants({ variant: "outline", size: "sm" })} gap-2 text-xs`
           }
         >
-          <Sparkles className="size-3.5 text-amber-500" />
+          <Sparkles className="size-3.5 text-amber-500 shrink-0 mr-1.5" />
           <span>{triggerButtonText}</span>
         </DialogTrigger>
       )}

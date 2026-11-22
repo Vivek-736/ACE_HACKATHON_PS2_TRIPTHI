@@ -51,14 +51,14 @@ export default function HowItWorksSection() {
           </p>
         </header>
 
-        <ol className="mt-16 flex flex-col md:grid md:grid-cols-3 md:gap-8">
+        <ol className="mt-16 ml-8 sm:ml-10 md:ml-0 flex flex-col md:grid md:grid-cols-3 md:gap-8">
           {steps.map((step, index) => {
             const Icon = step.icon;
             const isLast = index === steps.length - 1;
             return (
               <li
                 key={step.number}
-                className="relative border-l border-border pb-10 pl-10 last:pb-0 md:border-l-0 md:pb-0 md:pl-0"
+                className="relative border-l border-border pb-10 pl-8 sm:pl-10 md:border-l-0 md:pb-0 md:pl-0"
               >
                 {!isLast && (
                   <span
@@ -69,7 +69,7 @@ export default function HowItWorksSection() {
 
                 <span
                   aria-hidden="true"
-                  className="absolute -left-8 top-0 flex size-16 items-center justify-center rounded-full bg-secondary text-2xl font-bold text-secondary-foreground md:static"
+                  className="absolute -left-6 sm:-left-8 top-0 flex size-12 sm:size-16 items-center justify-center rounded-full bg-secondary text-xl sm:text-2xl font-bold text-secondary-foreground md:static"
                 >
                   {step.number}
                 </span>
