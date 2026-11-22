@@ -13,6 +13,14 @@ export type UserRole = (typeof USER_ROLES)[number];
 export const SELECTABLE_ROLES = ["donor", "receiver", "volunteer"] as const;
 export type SelectableRole = (typeof SELECTABLE_ROLES)[number];
 
+export const VERIFICATION_STATUSES = [
+  "unverified",
+  "pending",
+  "verified",
+  "rejected",
+] as const;
+export type VerificationStatus = (typeof VERIFICATION_STATUSES)[number];
+
 export const users = pgTable("users", {
   id: uuid("id").primaryKey().defaultRandom(),
   clerkId: text("clerk_id").notNull().unique(),
@@ -23,6 +31,11 @@ export const users = pgTable("users", {
   role: text("role", { enum: USER_ROLES }).notNull().default("unassigned"),
   organisationName: text("organisation_name"),
   displayName: text("display_name"),
+  verificationStatus: text("verification_status", {
+    enum: VERIFICATION_STATUSES,
+  })
+    .notNull()
+    .default("pending"),
   onboardedAt: timestamp("onboarded_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()

@@ -8,6 +8,7 @@ import { volunteerProfiles } from "@/db/schema/volunteers";
 import { users } from "@/db/schema/users";
 import { verifyHandoffOtp } from "@/lib/orders/otp";
 import { apiError, apiSuccess } from "@/lib/api/response";
+import { awardVolunteerCredits } from "@/lib/credits/service";
 import { createNotification } from "@/lib/notifications/service";
 import { generateDeliveryCompletedEmail } from "@/lib/email/templates";
 
@@ -119,8 +120,16 @@ export async function POST(
       })
       .where(eq(foodListings.id, order.listingId));
 
-    // Award +50 Rescue Credits, increment totalDeliveries, and set volunteer availability back to 'available'
+    // Award +50 Rescue Credits via ledger service, increment totalDeliveries, and set volunteer availability back to 'available'
     if (order.volunteerId) {
+      await awardVolunteerCredits({
+        volunteerUserId: order.volunteerId,
+        orderId: order.id,
+        type: "delivery_completed",
+        amount: 50,
+        description: `Verified delivery for rescue mission ${order.id} (${order.allocatedPortions} portions)`,
+      });
+
       const [vol] = await db
         .select()
         .from(volunteerProfiles)
@@ -131,7 +140,6 @@ export async function POST(
         await db
           .update(volunteerProfiles)
           .set({
-            rescueCredits: vol.rescueCredits + 50,
             totalDeliveries: vol.totalDeliveries + 1,
             availabilityStatus: "available",
             updatedAt: new Date(),

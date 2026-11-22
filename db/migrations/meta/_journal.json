@@ -43,6 +43,13 @@
       "when": 1795321178147,
       "tag": "0005_certain_squadron_sinister",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1795324528927,
+      "tag": "0006_slow_wither",
+      "breakpoints": true
     }
   ]
 }
