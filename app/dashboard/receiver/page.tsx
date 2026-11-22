@@ -24,6 +24,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { CapacityManager } from "@/components/receiver/capacity-manager";
 import { OrderTrackingCard } from "@/components/orders/order-tracking-card";
+import { ImpactDashboardView } from "@/components/impact/impact-dashboard-view";
 import { DiscoverFoodView } from "@/components/receiver/discover-food-view";
 import { PostFoodRequestDialog } from "@/components/receiver/post-food-request-dialog";
 import { ReceiverRequestsTable } from "@/components/receiver/receiver-requests-table";
@@ -256,6 +257,13 @@ async function ReceiverDashboardContent() {
 
       {/* Active Orders & Delivery Handshakes */}
       <OrderTrackingCard role="receiver" userId={user.id} />
+
+      {/* Verified Shelter Nourishment & Community Impact */}
+      <ImpactDashboardView
+        scope="mine"
+        title="Shelter Nourishment & Impact Footprint"
+        subtitle="Verified rescued food portions received and distributed by your organisation."
+      />
 
       {/* Map Spatial Radar Dual View */}
       <MapDualView

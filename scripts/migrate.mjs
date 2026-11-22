@@ -14,12 +14,13 @@ if (!databaseUrl) {
 const sql = neon(databaseUrl);
 
 async function runMigrations() {
-  console.log("Applying migrations to Neon PostgreSQL...");
+  const targetFile = process.argv[2] || "0006_slow_wither.sql";
+  console.log(`Applying migration ${targetFile} to Neon PostgreSQL...`);
   const migrationFile = path.join(
     process.cwd(),
     "db",
     "migrations",
-    "0004_mushy_amazoness.sql"
+    targetFile
   );
   const sqlContent = fs.readFileSync(migrationFile, "utf-8");
 

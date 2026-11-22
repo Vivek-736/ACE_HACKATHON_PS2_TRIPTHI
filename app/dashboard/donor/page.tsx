@@ -23,6 +23,8 @@ import { QuickPostDialog } from "@/components/donor/quick-post-dialog";
 import { DonorListingsTable } from "@/components/donor/donor-listings-table";
 import { OrderTrackingCard } from "@/components/orders/order-tracking-card";
 import { MapDualView } from "@/components/maps/map-dual-view";
+import { ImpactDashboardView } from "@/components/impact/impact-dashboard-view";
+import { SponsorshipCheckoutModal } from "@/components/payments/sponsorship-checkout-modal";
 import { calculateHaversineDistanceKm } from "@/lib/maps/haversine";
 import { MapMarker } from "@/lib/maps/types";
 import { ROLE_MARKER_COLORS } from "@/lib/maps/map-styles";
@@ -161,8 +163,9 @@ async function DonorDashboardContent() {
           </p>
         </div>
 
-        {/* Quick Post Action */}
+        {/* Quick Post & Monetization Actions */}
         <div className="flex items-center gap-3">
+          <SponsorshipCheckoutModal triggerButtonText="ESG & CSR Plans" />
           <QuickPostDialog />
         </div>
       </div>
@@ -232,6 +235,13 @@ async function DonorDashboardContent() {
 
       {/* Active Orders & Verification OTPs */}
       <OrderTrackingCard role="donor" userId={user.id} />
+
+      {/* Verified Kitchen ESG & Diversion Impact */}
+      <ImpactDashboardView
+        scope="mine"
+        title="Your Kitchen ESG & Diversion Footprint"
+        subtitle="Scope 3 waste diversion and emissions averted from your kitchen surplus."
+      />
 
       {/* Live Listings Table */}
       <div id="post-surplus">
