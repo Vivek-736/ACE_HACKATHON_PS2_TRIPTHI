@@ -324,3 +324,9 @@ When changing a major decision (database, auth, client-refresh strategy, map pro
 - **2026 — Image hosts.** Unsplash or Pexels are the sources. The exact `remotePatterns` hosts are not chosen yet and must be recorded when images are selected.
 
 **Do not silently change the stack or product scope.**
+
+<!-- TRIGGER.DEV SKILLS START -->
+## Trigger.dev agent skills
+
+This project has Trigger.dev agent skills installed in `.agents/skills/`. Before writing or changing Trigger.dev code (background tasks, scheduled tasks, realtime, or chat.agent AI agents), load the most relevant skill: `trigger-cost-savings`, `trigger-getting-started`, `trigger-realtime-and-frontend`.
+<!-- TRIGGER.DEV SKILLS END -->

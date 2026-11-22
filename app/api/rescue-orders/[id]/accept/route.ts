@@ -6,6 +6,7 @@ import { rescueOrders, deliveryEvents } from "@/db/schema/orders";
 import { volunteerProfiles } from "@/db/schema/volunteers";
 import { foodListings } from "@/db/schema/listings";
 import { apiError, apiSuccess } from "@/lib/api/response";
+import { createNotification } from "@/lib/notifications/service";
 
 export async function POST(
   req: NextRequest,
@@ -115,6 +116,35 @@ export async function POST(
       actorRole: "volunteer",
       notes: "Volunteer accepted rescue delivery assignment",
     });
+
+    // Notify Donor and Receiver that volunteer is assigned and en route
+    try {
+      const [listing] = await db
+        .select({ donorId: foodListings.donorId, title: foodListings.title })
+        .from(foodListings)
+        .where(eq(foodListings.id, order.listingId))
+        .limit(1);
+
+      if (listing) {
+        createNotification({
+          userId: listing.donorId,
+          type: "order_assigned",
+          title: "Courier En Route for Pickup",
+          message: `${user.displayName || "A volunteer"} has accepted your rescue order for "${listing.title}" and is heading your way.`,
+          link: "/dashboard/donor",
+        }).catch((e) => console.warn("Failed notifying donor of volunteer accept:", e));
+      }
+
+      createNotification({
+        userId: order.receiverId,
+        type: "order_assigned",
+        title: "Courier Assigned to Your Order",
+        message: `${user.displayName || "A volunteer"} has been assigned to transport your food rescue delivery.`,
+        link: "/dashboard/receiver",
+      }).catch((e) => console.warn("Failed notifying receiver of volunteer accept:", e));
+    } catch (notifErr) {
+      console.warn("[POST accept] Notification warning:", notifErr);
+    }
 
     return apiSuccess({
       order: updated[0],

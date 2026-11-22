@@ -6,6 +6,7 @@ import { rescueOrders, deliveryEvents } from "@/db/schema/orders";
 import { foodListings } from "@/db/schema/listings";
 import { verifyHandoffOtp } from "@/lib/orders/otp";
 import { apiError, apiSuccess } from "@/lib/api/response";
+import { createNotification } from "@/lib/notifications/service";
 
 export async function POST(
   req: NextRequest,
@@ -123,6 +124,35 @@ export async function POST(
       actorRole: "volunteer",
       notes: notes || "Food pickup verified via 4-digit donor OTP handshake",
     });
+
+    // Notify Donor and Receiver that pickup was verified
+    try {
+      const [listing] = await db
+        .select({ donorId: foodListings.donorId, title: foodListings.title })
+        .from(foodListings)
+        .where(eq(foodListings.id, order.listingId))
+        .limit(1);
+
+      if (listing) {
+        createNotification({
+          userId: listing.donorId,
+          type: "food_collected",
+          title: "Surplus Food Collected",
+          message: `Courier has verified pickup for "${listing.title}" and is in transit to the dropoff location.`,
+          link: "/dashboard/donor",
+        }).catch((e) => console.warn("Failed notifying donor of pickup:", e));
+      }
+
+      createNotification({
+        userId: order.receiverId,
+        type: "food_collected",
+        title: "Food In Transit to You",
+        message: `Courier has picked up your food rescue order and is on the way to your facility.`,
+        link: "/dashboard/receiver",
+      }).catch((e) => console.warn("Failed notifying receiver of pickup:", e));
+    } catch (notifErr) {
+      console.warn("[POST pickup verify] Notification warning:", notifErr);
+    }
 
     return apiSuccess({
       order: updatedOrder,
