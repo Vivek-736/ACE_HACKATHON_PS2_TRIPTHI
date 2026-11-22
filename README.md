@@ -32,9 +32,9 @@
 ```ascii
 ╔══════════════════════════════════════════════════════════════════════╗
 ║                                                                      ║
-║   🍲 60-Second Surplus Post    •   📍 Haversine Spatial Dispatch     ║
-║   🔐 Double-OTP Handoff Chain  •   🌱 Certified Scope 3 ESG Audit    ║
-║   ⚡ 4D Algorithmic Matching   •   👑 B2B Kitchen Telemetry Suite    ║
+║   🍲 60-Second Surplus Post    •   📍 Haversine Spatial Dispatch    ║
+║   🔐 Double-OTP Handoff Chain  •   🌱 Certified Scope 3 ESG Audit   ║
+║   ⚡ 4D Algorithmic Matching   •   👑 B2B Kitchen Telemetry Suite   ║
 ║                                                                      ║
 ╚══════════════════════════════════════════════════════════════════════╝
 ```
