@@ -162,13 +162,13 @@ async function ReceiverDashboardContent() {
       {/* Console Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <div className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-secondary-foreground">
+          <div className="inline-flex items-center gap-1.5 text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-secondary-foreground">
             <span>Receiver Community Console</span>
           </div>
-          <h1 className="mt-1 text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+          <h1 className="mt-1 text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight text-foreground">
             {orgName}
           </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <p className="mt-1 text-xs sm:text-sm text-muted-foreground">
             Request, discover, and coordinate food deliveries for your community.
           </p>
         </div>
@@ -180,72 +180,72 @@ async function ReceiverDashboardContent() {
             href="#discover"
             className={buttonVariants({
               variant: "outline",
-              className: "gap-1.5",
+              className: "gap-1.5 text-xs sm:text-sm",
             })}
           >
-            <Search className="size-4" />
+            <Search className="size-3.5 sm:size-4" />
             <span>Discover Food</span>
           </Link>
         </div>
       </div>
 
       {/* Primary Metric Cards */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="rounded-xl border border-border bg-card p-5">
+      <div className="grid grid-cols-1 gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="rounded-xl border border-border bg-card p-3.5 sm:p-5">
           <div className="flex items-center justify-between text-muted-foreground">
-            <span className="text-xs font-medium">Meals Reserved</span>
+            <span className="text-[11px] sm:text-xs font-medium">Meals Reserved</span>
             <Users className="size-4 text-primary" />
           </div>
-          <div className="mt-3">
-            <div className="text-2xl font-bold text-foreground">
+          <div className="mt-2 sm:mt-3">
+            <div className="text-xl sm:text-2xl font-bold text-foreground">
               {totalPortionsClaimed} Portions
             </div>
-            <p className="mt-1 text-xs text-muted-foreground">
+            <p className="mt-0.5 sm:mt-1 text-[11px] sm:text-xs text-muted-foreground">
               Surplus allocated to your center
             </p>
           </div>
         </div>
 
-        <div className="rounded-xl border border-border bg-card p-5">
+        <div className="rounded-xl border border-border bg-card p-3.5 sm:p-5">
           <div className="flex items-center justify-between text-muted-foreground">
-            <span className="text-xs font-medium">Current Capacity</span>
+            <span className="text-[11px] sm:text-xs font-medium">Current Capacity</span>
             <HeartHandshake className="size-4 text-secondary-foreground" />
           </div>
-          <div className="mt-3">
-            <div className="text-2xl font-bold text-foreground">
+          <div className="mt-2 sm:mt-3">
+            <div className="text-xl sm:text-2xl font-bold text-foreground">
               {profile.currentCapacityPortions} / {profile.dailyCapacityPortions}
             </div>
-            <p className="mt-1 text-xs text-muted-foreground">
+            <p className="mt-0.5 sm:mt-1 text-[11px] sm:text-xs text-muted-foreground">
               Portions can accept today
             </p>
           </div>
         </div>
 
-        <div className="rounded-xl border border-border bg-card p-5">
+        <div className="rounded-xl border border-border bg-card p-3.5 sm:p-5">
           <div className="flex items-center justify-between text-muted-foreground">
-            <span className="text-xs font-medium">Active Deliveries</span>
+            <span className="text-[11px] sm:text-xs font-medium">Active Deliveries</span>
             <Truck className="size-4 text-accent-foreground" />
           </div>
-          <div className="mt-3">
-            <div className="text-2xl font-bold text-foreground">
+          <div className="mt-2 sm:mt-3">
+            <div className="text-xl sm:text-2xl font-bold text-foreground">
               {reservations.filter((r) => r.status === "confirmed").length} Active
             </div>
-            <p className="mt-1 text-xs text-muted-foreground">
+            <p className="mt-0.5 sm:mt-1 text-[11px] sm:text-xs text-muted-foreground">
               In rescue coordination
             </p>
           </div>
         </div>
 
-        <div className="rounded-xl border border-border bg-card p-5">
+        <div className="rounded-xl border border-border bg-card p-3.5 sm:p-5">
           <div className="flex items-center justify-between text-muted-foreground">
-            <span className="text-xs font-medium">Dispatch Radius</span>
+            <span className="text-[11px] sm:text-xs font-medium">Dispatch Radius</span>
             <MapPin className="size-4 text-primary" />
           </div>
-          <div className="mt-3">
-            <div className="text-2xl font-bold text-foreground">
+          <div className="mt-2 sm:mt-3">
+            <div className="text-xl sm:text-2xl font-bold text-foreground">
               {profile.serviceRadiusKm} km
             </div>
-            <p className="mt-1 text-xs text-muted-foreground">
+            <p className="mt-0.5 sm:mt-1 text-[11px] sm:text-xs text-muted-foreground">
               Configured receiver scope
             </p>
           </div>
@@ -291,12 +291,12 @@ async function ReceiverDashboardContent() {
       <ReceiverRequestsTable receiverId={user.id} />
 
       {/* Food Safety & Responsibility Disclaimer */}
-      <div className="rounded-xl border border-border bg-muted/20 p-5 text-xs text-muted-foreground">
-        <div className="font-semibold text-foreground mb-1">
+      <div className="rounded-xl border border-border bg-muted/20 p-3.5 sm:p-5 text-[11px] sm:text-xs text-muted-foreground">
+        <div className="font-semibold text-foreground text-xs sm:text-sm mb-1">
           Food Safety Notice for Receivers
         </div>
         <p className="leading-relaxed">{FOOD_SAFETY_DISCLAIMER}</p>
-        <div className="mt-2 text-[11px] text-muted-foreground/80">
+        <div className="mt-1.5 sm:mt-2 text-[10px] sm:text-[11px] text-muted-foreground/80">
           Receivers receive rescued food with zero participation fee. Verify temperature and visual condition before distribution.
         </div>
       </div>

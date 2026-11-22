@@ -27,12 +27,12 @@ export function DonorProBanner({
 }: DonorProBannerProps) {
   if (isPro) {
     return (
-      <div className="relative overflow-hidden rounded-2xl border-2 border-emerald-500/40 bg-gradient-to-r from-emerald-500/10 via-primary/10 to-card p-6 shadow-xl shadow-emerald-500/5 transition-all">
+      <div className="relative overflow-hidden rounded-2xl border-2 border-emerald-500/40 bg-linear-to-r from-emerald-500/10 via-primary/10 to-card p-6 shadow-xl shadow-emerald-500/5 transition-all">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="space-y-2 max-w-2xl">
-            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/15 px-3 py-1 text-xs font-bold text-emerald-700 dark:text-emerald-300">
+            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/15 px-3 py-1 text-xs font-bold text-emerald-700">
               <span className="size-2 rounded-full bg-emerald-500 animate-ping" />
-              <Crown className="size-3.5 text-emerald-600 dark:text-emerald-400" />
+              <Crown className="size-3.5 text-emerald-600" />
               <span>TRIPTI PRO SUBSCRIBER &bull; ACTIVE</span>
             </div>
 
@@ -80,7 +80,7 @@ export function DonorProBanner({
             <SponsorshipCheckoutModal
               triggerButtonText="Manage Plan"
               defaultPlanId="donor_subscription_enterprise"
-              className="inline-flex items-center justify-center rounded-md border border-border bg-card px-3.5 py-2 text-xs font-medium text-muted-foreground hover:bg-muted/30 transition-colors"
+              className="inline-flex items-center justify-center gap-2 rounded-md border border-border bg-card px-3.5 py-2 text-xs font-medium text-muted-foreground hover:bg-muted/30 transition-colors"
             />
           </div>
         </div>
@@ -89,10 +89,10 @@ export function DonorProBanner({
   }
 
   return (
-    <div className="relative overflow-hidden rounded-2xl border-2 border-amber-500/40 bg-gradient-to-r from-amber-500/10 via-primary/10 to-card p-6 shadow-xl shadow-amber-500/5 transition-all">
+    <div className="relative overflow-hidden rounded-2xl border-2 border-amber-500/40 bg-linear-to-r from-amber-500/10 via-primary/10 to-card p-6 shadow-xl shadow-amber-500/5 transition-all">
       <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
         <div className="space-y-2.5 max-w-2xl">
-          <div className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-amber-500/15 px-3 py-1 text-xs font-bold text-amber-700 dark:text-amber-400 animate-pulse">
+          <div className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-amber-500/15 px-3 py-1 text-xs font-bold text-amber-700 animate-pulse">
             <Sparkles className="size-3.5" />
             <span>TRIPTI PRO INTELLIGENCE &bull; UPGRADE AVAILABLE</span>
           </div>

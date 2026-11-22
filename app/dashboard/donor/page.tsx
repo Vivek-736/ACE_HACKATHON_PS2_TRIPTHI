@@ -158,13 +158,13 @@ async function DonorDashboardContent() {
       {/* Console Welcome & Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <div className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-secondary-foreground">
+          <div className="inline-flex items-center gap-1.5 text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-secondary-foreground">
             <span>Donor Console</span>
           </div>
-          <h1 className="mt-1 text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+          <h1 className="mt-1 text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight text-foreground">
             {orgName}
           </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <p className="mt-1 text-xs sm:text-sm text-muted-foreground">
             Publish surplus food in under 60 seconds and track handoffs.
           </p>
         </div>
@@ -173,7 +173,7 @@ async function DonorDashboardContent() {
         <div className="flex flex-wrap items-center gap-2.5">
           <Link
             href="/dashboard/donor/analytics"
-            className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-xs font-semibold text-emerald-700 dark:text-emerald-400 hover:bg-emerald-500/20 transition-colors shadow-sm"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-2.5 sm:px-3 py-1 sm:py-1.5 text-[11px] sm:text-xs font-semibold text-emerald-700 dark:text-emerald-400 hover:bg-emerald-500/20 transition-colors shadow-sm"
           >
             <LineChart className="size-3.5 text-emerald-600 dark:text-emerald-400" />
             <span>Pro Analytics</span>
@@ -187,62 +187,62 @@ async function DonorDashboardContent() {
       </div>
 
       {/* 4 Primary Metric Cards */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="rounded-xl border border-border bg-card p-5">
+      <div className="grid grid-cols-1 gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="rounded-xl border border-border bg-card p-3.5 sm:p-5">
           <div className="flex items-center justify-between text-muted-foreground">
-            <span className="text-xs font-medium">Active Listings</span>
+            <span className="text-[11px] sm:text-xs font-medium">Active Listings</span>
             <UtensilsCrossed className="size-4 text-primary" />
           </div>
-          <div className="mt-3">
-            <div className="text-2xl font-bold text-foreground">
+          <div className="mt-2 sm:mt-3">
+            <div className="text-xl sm:text-2xl font-bold text-foreground">
               {activeCount} Available
             </div>
-            <p className="mt-1 text-xs text-muted-foreground">
+            <p className="mt-0.5 sm:mt-1 text-[11px] sm:text-xs text-muted-foreground">
               Open for claim &amp; pickup
             </p>
           </div>
         </div>
 
-        <div className="rounded-xl border border-border bg-card p-5">
+        <div className="rounded-xl border border-border bg-card p-3.5 sm:p-5">
           <div className="flex items-center justify-between text-muted-foreground">
-            <span className="text-xs font-medium">Portions Allocated</span>
+            <span className="text-[11px] sm:text-xs font-medium">Portions Allocated</span>
             <Flame className="size-4 text-accent-foreground" />
           </div>
-          <div className="mt-3">
-            <div className="text-2xl font-bold text-foreground">
+          <div className="mt-2 sm:mt-3">
+            <div className="text-xl sm:text-2xl font-bold text-foreground">
               {totalPortionsRescued}
             </div>
-            <p className="mt-1 text-xs text-muted-foreground">
+            <p className="mt-0.5 sm:mt-1 text-[11px] sm:text-xs text-muted-foreground">
               Portions reserved / delivered
             </p>
           </div>
         </div>
 
-        <div className="rounded-xl border border-border bg-card p-5">
+        <div className="rounded-xl border border-border bg-card p-3.5 sm:p-5">
           <div className="flex items-center justify-between text-muted-foreground">
-            <span className="text-xs font-medium">Total Surplus Posted</span>
+            <span className="text-[11px] sm:text-xs font-medium">Total Surplus Posted</span>
             <Clock className="size-4 text-secondary-foreground" />
           </div>
-          <div className="mt-3">
-            <div className="text-2xl font-bold text-foreground">
+          <div className="mt-2 sm:mt-3">
+            <div className="text-xl sm:text-2xl font-bold text-foreground">
               {totalPortionsPosted} Portions
             </div>
-            <p className="mt-1 text-xs text-muted-foreground">
+            <p className="mt-0.5 sm:mt-1 text-[11px] sm:text-xs text-muted-foreground">
               Across {listings.length} listings
             </p>
           </div>
         </div>
 
-        <div className="rounded-xl border border-border bg-card p-5">
+        <div className="rounded-xl border border-border bg-card p-3.5 sm:p-5">
           <div className="flex items-center justify-between text-muted-foreground">
-            <span className="text-xs font-medium">Emissions Avoided</span>
+            <span className="text-[11px] sm:text-xs font-medium">Emissions Avoided</span>
             <Leaf className="size-4 text-primary" />
           </div>
-          <div className="mt-3">
-            <div className="text-2xl font-bold text-foreground">
+          <div className="mt-2 sm:mt-3">
+            <div className="text-xl sm:text-2xl font-bold text-foreground">
               {emissionsAvoidedKg} kg CO₂e
             </div>
-            <p className="mt-1 text-xs text-muted-foreground">
+            <p className="mt-0.5 sm:mt-1 text-[11px] sm:text-xs text-muted-foreground">
               {wasteAvoidedKg} kg food waste prevented
             </p>
           </div>
@@ -281,12 +281,12 @@ async function DonorDashboardContent() {
       />
 
       {/* Food Safety & Responsibility Disclaimer */}
-      <div className="rounded-xl border border-border bg-muted/20 p-5 text-xs text-muted-foreground">
-        <div className="font-semibold text-foreground mb-1">
+      <div className="rounded-xl border border-border bg-muted/20 p-3.5 sm:p-5 text-[11px] sm:text-xs text-muted-foreground">
+        <div className="font-semibold text-foreground text-xs sm:text-sm mb-1">
           Food Safety &amp; Operational Standards
         </div>
         <p className="leading-relaxed">{FOOD_SAFETY_DISCLAIMER}</p>
-        <div className="mt-2 text-[11px] text-muted-foreground/80">
+        <div className="mt-1.5 sm:mt-2 text-[10px] sm:text-[11px] text-muted-foreground/80">
           Impact assumptions: 0.42 kg food waste avoided and 0.84 kg CO₂e emissions reduction per delivered meal portion.
         </div>
       </div>

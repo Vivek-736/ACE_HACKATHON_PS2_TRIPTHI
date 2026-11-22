@@ -81,23 +81,23 @@ export function ImpactDashboardView({
       {/* Header bar */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <div className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-bold text-primary uppercase">
-            <Leaf className="size-3.5" />
+          <div className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2 sm:px-2.5 py-0.5 text-[10px] sm:text-xs font-bold text-primary uppercase">
+            <Leaf className="size-3 sm:size-3.5" />
             <span>Verified Impact &amp; ESG Metrics</span>
           </div>
-          <h2 className="mt-1 text-xl font-bold text-foreground sm:text-2xl">
+          <h2 className="mt-1 text-lg sm:text-xl lg:text-2xl font-bold text-foreground">
             {title}
           </h2>
-          <p className="mt-0.5 text-xs text-muted-foreground">{subtitle}</p>
+          <p className="mt-0.5 text-[11px] sm:text-xs text-muted-foreground">{subtitle}</p>
         </div>
 
         <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={handleExportReport}
-            className={`${buttonVariants({ variant: "outline", size: "sm" })} gap-1.5 text-xs`}
+            className={`${buttonVariants({ variant: "outline", size: "sm" })} gap-1.5 text-[11px] sm:text-xs py-1 sm:py-1.5 px-2.5 sm:px-3`}
           >
-            <Download className="size-3.5" />
+            <Download className="size-3 sm:size-3.5" />
             <span>Export ESG Report</span>
           </button>
 
@@ -108,82 +108,82 @@ export function ImpactDashboardView({
               fetchImpact();
             }}
             disabled={refreshing}
-            className="rounded-md border border-border bg-card p-2 text-muted-foreground hover:bg-muted/30"
+            className="rounded-md border border-border bg-card p-1.5 sm:p-2 text-muted-foreground hover:bg-muted/30"
           >
-            <RefreshCw className={`size-3.5 ${refreshing ? "animate-spin text-primary" : ""}`} />
+            <RefreshCw className={`size-3 sm:size-3.5 ${refreshing ? "animate-spin text-primary" : ""}`} />
           </button>
         </div>
       </div>
 
       {/* 4 Primary Hero Impact Cards */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {/* 1. Meals Saved */}
-        <div className="rounded-2xl border border-primary/30 bg-primary/5 p-5 shadow-xs">
+        <div className="rounded-2xl border border-primary/30 bg-primary/5 p-3.5 sm:p-5 shadow-xs">
           <div className="flex items-center justify-between text-primary">
-            <span className="text-xs font-semibold uppercase tracking-wider">
+            <span className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider">
               Meals Rescued
             </span>
-            <Utensils className="size-4" />
+            <Utensils className="size-3.5 sm:size-4" />
           </div>
-          <div className="mt-3">
-            <div className="text-3xl font-extrabold tracking-tight text-foreground">
+          <div className="mt-2 sm:mt-3">
+            <div className="text-xl sm:text-2xl lg:text-3xl font-extrabold tracking-tight text-foreground">
               {data.mealsRescued.toLocaleString()}+
             </div>
-            <p className="mt-1 text-xs text-muted-foreground">
+            <p className="mt-0.5 sm:mt-1 text-[10px] sm:text-xs text-muted-foreground">
               Delivered safely to community shelters
             </p>
           </div>
         </div>
 
         {/* 2. Food Waste Avoided */}
-        <div className="rounded-2xl border border-secondary/40 bg-secondary/15 p-5 shadow-xs">
+        <div className="rounded-2xl border border-secondary/40 bg-secondary/15 p-3.5 sm:p-5 shadow-xs">
           <div className="flex items-center justify-between text-secondary-foreground">
-            <span className="text-xs font-semibold uppercase tracking-wider">
+            <span className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider">
               Food Waste Diverted
             </span>
-            <Scale className="size-4" />
+            <Scale className="size-3.5 sm:size-4" />
           </div>
-          <div className="mt-3">
-            <div className="text-3xl font-extrabold tracking-tight text-foreground">
+          <div className="mt-2 sm:mt-3">
+            <div className="text-xl sm:text-2xl lg:text-3xl font-extrabold tracking-tight text-foreground">
               {data.foodWasteDivertedKg.toLocaleString()} kg
             </div>
-            <p className="mt-1 text-xs text-muted-foreground">
+            <p className="mt-0.5 sm:mt-1 text-[10px] sm:text-xs text-muted-foreground">
               Diverted from methane-producing landfills
             </p>
           </div>
         </div>
 
         {/* 3. CO2e Avoided */}
-        <div className="rounded-2xl border border-border bg-card p-5 shadow-xs">
+        <div className="rounded-2xl border border-border bg-card p-3.5 sm:p-5 shadow-xs">
           <div className="flex items-center justify-between text-primary">
-            <span className="text-xs font-semibold uppercase tracking-wider">
+            <span className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider">
               GHG Emissions Avoided
             </span>
-            <Leaf className="size-4" />
+            <Leaf className="size-3.5 sm:size-4" />
           </div>
-          <div className="mt-3">
-            <div className="text-3xl font-extrabold tracking-tight text-foreground">
+          <div className="mt-2 sm:mt-3">
+            <div className="text-xl sm:text-2xl lg:text-3xl font-extrabold tracking-tight text-foreground">
               {data.emissionsAvoidedKgCo2e.toLocaleString()} kg CO₂e
             </div>
-            <p className="mt-1 text-xs text-muted-foreground">
+            <p className="mt-0.5 sm:mt-1 text-[10px] sm:text-xs text-muted-foreground">
               Scope 3 avoided landfill emissions
             </p>
           </div>
         </div>
 
         {/* 4. Verified Rescue Missions */}
-        <div className="rounded-2xl border border-border bg-card p-5 shadow-xs">
+        <div className="rounded-2xl border border-border bg-card p-3.5 sm:p-5 shadow-xs">
           <div className="flex items-center justify-between text-accent-foreground">
-            <span className="text-xs font-semibold uppercase tracking-wider">
+            <span className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider">
               Completed Missions
             </span>
-            <Truck className="size-4" />
+            <Truck className="size-3.5 sm:size-4" />
           </div>
-          <div className="mt-3">
-            <div className="text-3xl font-extrabold tracking-tight text-foreground">
+          <div className="mt-2 sm:mt-3">
+            <div className="text-xl sm:text-2xl lg:text-3xl font-extrabold tracking-tight text-foreground">
               {data.completedMissions} Rescues
             </div>
-            <p className="mt-1 text-xs text-muted-foreground">
+            <p className="mt-0.5 sm:mt-1 text-[10px] sm:text-xs text-muted-foreground">
               100% physically handshaked via dual OTP
             </p>
           </div>

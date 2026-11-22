@@ -152,23 +152,23 @@ async function VolunteerDashboardContent() {
       {/* Console Welcome & Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <div className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-secondary-foreground">
+          <div className="inline-flex items-center gap-1.5 text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-secondary-foreground">
             <span>Rescue Volunteer Console</span>
           </div>
-          <h1 className="mt-1 text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+          <h1 className="mt-1 text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight text-foreground">
             {volunteerName}
           </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <p className="mt-1 text-xs sm:text-sm text-muted-foreground">
             Pick up surplus food and deliver it to nearby community receivers before expiry.
           </p>
         </div>
 
         {/* Live Staging Indicator */}
-        <div className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-xs">
-          <MapPin className="h-4 w-4 text-primary" />
+        <div className="flex items-center gap-2 rounded-xl border border-border bg-card px-2.5 sm:px-3 py-1.5 sm:py-2 text-[11px] sm:text-xs">
+          <MapPin className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary" />
           <div>
-            <div className="font-semibold text-foreground">{profile.locationName}</div>
-            <div className="text-[11px] text-muted-foreground">
+            <div className="font-semibold text-foreground text-xs sm:text-sm">{profile.locationName}</div>
+            <div className="text-[10px] sm:text-[11px] text-muted-foreground">
               {profile.transportMode.toUpperCase()} &bull; {profile.preferredRadiusKm} km Radius
             </div>
           </div>
@@ -183,56 +183,56 @@ async function VolunteerDashboardContent() {
       />
 
       {/* 4 Primary Metric Cards */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="rounded-xl border border-border bg-card p-5">
+      <div className="grid grid-cols-1 gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="rounded-xl border border-border bg-card p-3.5 sm:p-5">
           <div className="flex items-center justify-between text-muted-foreground">
-            <span className="text-xs font-medium">Completed Rescues</span>
+            <span className="text-[11px] sm:text-xs font-medium">Completed Rescues</span>
             <CheckCircle className="size-4 text-primary" />
           </div>
-          <div className="mt-3">
-            <div className="text-2xl font-bold text-foreground">
+          <div className="mt-2 sm:mt-3">
+            <div className="text-xl sm:text-2xl font-bold text-foreground">
               {profile.totalDeliveries} Missions
             </div>
-            <p className="mt-1 text-xs text-muted-foreground">Delivered safely on time</p>
+            <p className="mt-0.5 sm:mt-1 text-[11px] sm:text-xs text-muted-foreground">Delivered safely on time</p>
           </div>
         </div>
 
-        <div className="rounded-xl border border-border bg-card p-5">
+        <div className="rounded-xl border border-border bg-card p-3.5 sm:p-5">
           <div className="flex items-center justify-between text-muted-foreground">
-            <span className="text-xs font-medium">Rescue Credits</span>
+            <span className="text-[11px] sm:text-xs font-medium">Rescue Credits</span>
             <Award className="size-4 text-accent-foreground" />
           </div>
-          <div className="mt-3">
-            <div className="text-2xl font-bold text-foreground">
+          <div className="mt-2 sm:mt-3">
+            <div className="text-xl sm:text-2xl font-bold text-foreground">
               {profile.rescueCredits} Credits
             </div>
-            <p className="mt-1 text-xs text-muted-foreground">Non-cash recognition points</p>
+            <p className="mt-0.5 sm:mt-1 text-[11px] sm:text-xs text-muted-foreground">Non-cash recognition points</p>
           </div>
         </div>
 
-        <div className="rounded-xl border border-border bg-card p-5">
+        <div className="rounded-xl border border-border bg-card p-3.5 sm:p-5">
           <div className="flex items-center justify-between text-muted-foreground">
-            <span className="text-xs font-medium">Active Zone Scope</span>
+            <span className="text-[11px] sm:text-xs font-medium">Active Zone Scope</span>
             <Navigation className="size-4 text-secondary-foreground" />
           </div>
-          <div className="mt-3">
-            <div className="text-2xl font-bold text-foreground">
+          <div className="mt-2 sm:mt-3">
+            <div className="text-xl sm:text-2xl font-bold text-foreground">
               {profile.preferredRadiusKm} km
             </div>
-            <p className="mt-1 text-xs text-muted-foreground">Dispatch search radius</p>
+            <p className="mt-0.5 sm:mt-1 text-[11px] sm:text-xs text-muted-foreground">Dispatch search radius</p>
           </div>
         </div>
 
-        <div className="rounded-xl border border-border bg-card p-5">
+        <div className="rounded-xl border border-border bg-card p-3.5 sm:p-5">
           <div className="flex items-center justify-between text-muted-foreground">
-            <span className="text-xs font-medium">Reliability Score</span>
+            <span className="text-[11px] sm:text-xs font-medium">Reliability Score</span>
             <ShieldCheck className="size-4 text-primary" />
           </div>
-          <div className="mt-3">
-            <div className="text-2xl font-bold text-foreground">
+          <div className="mt-2 sm:mt-3">
+            <div className="text-xl sm:text-2xl font-bold text-foreground">
               {profile.onTimeRate}%
             </div>
-            <p className="mt-1 text-xs text-muted-foreground">Verified on-time handoffs</p>
+            <p className="mt-0.5 sm:mt-1 text-[11px] sm:text-xs text-muted-foreground">Verified on-time handoffs</p>
           </div>
         </div>
       </div>

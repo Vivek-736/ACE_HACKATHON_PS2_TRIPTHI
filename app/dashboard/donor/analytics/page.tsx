@@ -123,13 +123,13 @@ async function DonorAnalyticsContent() {
       {/* Main Page Title Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between print:hidden">
         <div>
-          <div className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-secondary-foreground">
+          <div className="inline-flex items-center gap-1.5 text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-secondary-foreground">
             <span>B2B Commercial Kitchen Analytics</span>
           </div>
-          <h1 className="mt-1 text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+          <h1 className="mt-1 text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight text-foreground">
             Kitchen Overproduction &amp; Scope 3 ESG Workspace
           </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <p className="mt-1 text-xs sm:text-sm text-muted-foreground">
             Telemetry reports, day-of-week waste trends, and audit-grade ESG certifications for{" "}
             <strong className="text-foreground">{orgName}</strong>.
           </p>
@@ -141,7 +141,7 @@ async function DonorAnalyticsContent() {
             <SponsorshipCheckoutModal
               triggerButtonText="Upgrade to Pro (₹499/mo)"
               defaultPlanId="donor_subscription_pro"
-              className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs px-4 py-2"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs px-3 sm:px-4 py-1.5 sm:py-2"
             />
           )}
         </div>
@@ -149,17 +149,17 @@ async function DonorAnalyticsContent() {
 
       {/* Preview Mode Alert (if Free tier) */}
       {!isPro && (
-        <div className="rounded-xl border-2 border-amber-500/40 bg-gradient-to-r from-amber-500/10 via-primary/5 to-card p-5 text-xs text-foreground print:hidden">
+        <div className="rounded-xl border-2 border-amber-500/40 bg-gradient-to-r from-amber-500/10 via-primary/5 to-card p-3.5 sm:p-5 text-xs text-foreground print:hidden">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="flex items-start gap-3">
-              <span className="rounded-full bg-amber-500/20 p-2 text-amber-600 dark:text-amber-400 shrink-0">
+              <span className="rounded-full bg-amber-500/20 p-1.5 sm:p-2 text-amber-600 dark:text-amber-400 shrink-0">
                 <Sparkles className="size-4" />
               </span>
               <div>
-                <strong className="font-bold text-sm block">
+                <strong className="font-bold text-xs sm:text-sm block">
                   You are previewing Tripti Pro Kitchen Telemetry
                 </strong>
-                <p className="text-muted-foreground mt-0.5">
+                <p className="text-muted-foreground text-[11px] sm:text-xs mt-0.5">
                   Food rescue is always 100% free. Upgrade to Pro for ₹499/month to continuously stream real-time overproduction telemetry, unlock automated batch right-sizing recommendations, and generate unlimited downloadable official ESG certificates.
                 </p>
               </div>
@@ -167,70 +167,70 @@ async function DonorAnalyticsContent() {
             <SponsorshipCheckoutModal
               triggerButtonText="Activate Pro (₹499/mo)"
               defaultPlanId="donor_subscription_pro"
-              className="bg-primary text-primary-foreground font-bold shrink-0 text-xs px-4 py-2"
+              className="bg-primary text-primary-foreground font-bold shrink-0 text-xs px-3 sm:px-4 py-1.5 sm:py-2"
             />
           </div>
         </div>
       )}
 
       {/* 4 Core Pro Telemetry Metric Cards */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 print:grid-cols-2">
-        <div className="rounded-xl border border-border bg-card p-5 shadow-sm">
+      <div className="grid grid-cols-1 gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-4 print:grid-cols-2">
+        <div className="rounded-xl border border-border bg-card p-3.5 sm:p-5 shadow-sm">
           <div className="flex items-center justify-between text-muted-foreground">
-            <span className="text-xs font-medium">Procurement Waste Averted</span>
+            <span className="text-[11px] sm:text-xs font-medium">Procurement Waste Averted</span>
             <IndianRupee className="size-4 text-emerald-600 dark:text-emerald-400" />
           </div>
-          <div className="mt-3">
-            <div className="text-2xl font-bold text-foreground">
+          <div className="mt-2 sm:mt-3">
+            <div className="text-xl sm:text-2xl font-bold text-foreground">
               ₹{monthlyProcurementSavings.toLocaleString("en-IN")} / mo
             </div>
-            <p className="mt-1 text-xs text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1">
+            <p className="mt-0.5 sm:mt-1 text-[11px] sm:text-xs text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1">
               <TrendingDown className="size-3" />
               ~18.2% cost reduction through right-sizing
             </p>
           </div>
         </div>
 
-        <div className="rounded-xl border border-border bg-card p-5 shadow-sm">
+        <div className="rounded-xl border border-border bg-card p-3.5 sm:p-5 shadow-sm">
           <div className="flex items-center justify-between text-muted-foreground">
-            <span className="text-xs font-medium">Kitchen Overproduction Ratio</span>
+            <span className="text-[11px] sm:text-xs font-medium">Kitchen Overproduction Ratio</span>
             <ChefHat className="size-4 text-primary" />
           </div>
-          <div className="mt-3">
-            <div className="text-2xl font-bold text-foreground">
+          <div className="mt-2 sm:mt-3">
+            <div className="text-xl sm:text-2xl font-bold text-foreground">
               8.8% Surplus
             </div>
-            <p className="mt-1 text-xs text-muted-foreground">
+            <p className="mt-0.5 sm:mt-1 text-[11px] sm:text-xs text-muted-foreground">
               Benchmark for hospitality: 14%–22%
             </p>
           </div>
         </div>
 
-        <div className="rounded-xl border border-border bg-card p-5 shadow-sm">
+        <div className="rounded-xl border border-border bg-card p-3.5 sm:p-5 shadow-sm">
           <div className="flex items-center justify-between text-muted-foreground">
-            <span className="text-xs font-medium">Scope 3 CO₂e Averted</span>
+            <span className="text-[11px] sm:text-xs font-medium">Scope 3 CO₂e Averted</span>
             <Leaf className="size-4 text-primary" />
           </div>
-          <div className="mt-3">
-            <div className="text-2xl font-bold text-foreground">
+          <div className="mt-2 sm:mt-3">
+            <div className="text-xl sm:text-2xl font-bold text-foreground">
               {emissionsAvoidedKg} kg CO₂e
             </div>
-            <p className="mt-1 text-xs text-muted-foreground">
+            <p className="mt-0.5 sm:mt-1 text-[11px] sm:text-xs text-muted-foreground">
               {wasteAvoidedKg} kg landfill organic waste averted
             </p>
           </div>
         </div>
 
-        <div className="rounded-xl border border-border bg-card p-5 shadow-sm">
+        <div className="rounded-xl border border-border bg-card p-3.5 sm:p-5 shadow-sm">
           <div className="flex items-center justify-between text-muted-foreground">
-            <span className="text-xs font-medium">Priority Courier Dispatch</span>
+            <span className="text-[11px] sm:text-xs font-medium">Priority Courier Dispatch</span>
             <Zap className="size-4 text-amber-500" />
           </div>
-          <div className="mt-3">
-            <div className="text-2xl font-bold text-foreground">
+          <div className="mt-2 sm:mt-3">
+            <div className="text-xl sm:text-2xl font-bold text-foreground">
               {isPro ? "⚡ 2.1x Faster" : "Standard Speed"}
             </div>
-            <p className="mt-1 text-xs text-muted-foreground">
+            <p className="mt-0.5 sm:mt-1 text-[11px] sm:text-xs text-muted-foreground">
               {isPro
                 ? "Priority dispatch to top nearby couriers active"
                 : "Upgrade to Pro for priority matching"}
