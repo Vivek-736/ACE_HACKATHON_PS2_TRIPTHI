@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { CheckCircle2, Edit3, Settings, ShieldCheck, Users } from "lucide-react";
 import {
   Dialog,
@@ -16,10 +17,11 @@ import type { ReceiverProfile } from "@/db/schema/requests";
 
 interface CapacityManagerProps {
   profile: ReceiverProfile | null;
-  onUpdateSuccess: () => void;
+  onUpdateSuccess?: () => void;
 }
 
 export function CapacityManager({ profile, onUpdateSuccess }: CapacityManagerProps) {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -73,7 +75,8 @@ export function CapacityManager({ profile, onUpdateSuccess }: CapacityManagerPro
       setTimeout(() => {
         setOpen(false);
         setSuccessMsg(null);
-        onUpdateSuccess();
+        router.refresh();
+        onUpdateSuccess?.();
       }, 1200);
     } catch (err: unknown) {
       setErrorMsg(
@@ -148,7 +151,7 @@ export function CapacityManager({ profile, onUpdateSuccess }: CapacityManagerPro
                     required
                     value={dailyCapacity}
                     onChange={(e) => setDailyCapacity(Number(e.target.value))}
-                    className="w-full rounded-md border border-input bg-card px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none"
+                    className="w-full rounded-md border bg-card px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none"
                   />
                 </div>
 
@@ -163,7 +166,7 @@ export function CapacityManager({ profile, onUpdateSuccess }: CapacityManagerPro
                     required
                     value={currentCapacity}
                     onChange={(e) => setCurrentCapacity(Number(e.target.value))}
-                    className="w-full rounded-md border border-input bg-card px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none"
+                    className="w-full rounded-md border border-input bg-card px-3 py-2 text-sm text-foreground focus:outline-none"
                   />
                 </div>
               </div>
@@ -177,7 +180,7 @@ export function CapacityManager({ profile, onUpdateSuccess }: CapacityManagerPro
                   value={dietaryPreferences}
                   onChange={(e) => setDietaryPreferences(e.target.value)}
                   placeholder="e.g. Vegetarian only, Rice, Dal, Chapati, Fresh Produce"
-                  className="w-full rounded-md border border-input bg-card px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none"
+                  className="w-full rounded-md border border-input bg-card px-3 py-2 text-sm text-foreground focus:outline-none"
                 />
               </div>
 
@@ -192,7 +195,7 @@ export function CapacityManager({ profile, onUpdateSuccess }: CapacityManagerPro
                     max="50"
                     value={serviceRadiusKm}
                     onChange={(e) => setServiceRadiusKm(Number(e.target.value))}
-                    className="w-full rounded-md border border-input bg-card px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none"
+                    className="w-full rounded-md border border-input bg-card px-3 py-2 text-sm text-foreground focus:outline-none"
                   />
                 </div>
 
@@ -205,7 +208,7 @@ export function CapacityManager({ profile, onUpdateSuccess }: CapacityManagerPro
                     value={operatingHours}
                     onChange={(e) => setOperatingHours(e.target.value)}
                     placeholder="e.g. 09:00 - 22:00"
-                    className="w-full rounded-md border border-input bg-card px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none"
+                    className="w-full rounded-md border border-input bg-card px-3 py-2 text-sm text-foreground focus:outline-none"
                   />
                 </div>
               </div>

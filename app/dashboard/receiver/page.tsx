@@ -252,7 +252,7 @@ async function ReceiverDashboardContent() {
       </div>
 
       {/* Receiver Capacity & Preferences Manager */}
-      <CapacityManager profile={profile} onUpdateSuccess={() => {}} />
+      <CapacityManager profile={profile} />
 
       {/* Active Orders & Delivery Handshakes */}
       <OrderTrackingCard role="receiver" userId={user.id} />
