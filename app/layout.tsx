@@ -3,6 +3,7 @@ import { Roboto_Condensed } from "next/font/google";
 import { Suspense } from "react";
 import { ClerkProvider } from "@clerk/nextjs";
 import { UserSyncProvider } from "@/components/providers/user-sync-provider";
+import { QueryProvider } from "@/components/providers/query-provider";
 import "./globals.css";
 
 const robotoCondensed = Roboto_Condensed({
@@ -43,7 +44,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full flex flex-col">
         <Suspense fallback={null}>
           <ClerkProvider>
-            <UserSyncProvider>{children}</UserSyncProvider>
+            <UserSyncProvider>
+              <QueryProvider>{children}</QueryProvider>
+            </UserSyncProvider>
           </ClerkProvider>
         </Suspense>
       </body>

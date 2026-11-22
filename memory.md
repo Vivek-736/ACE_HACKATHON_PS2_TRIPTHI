@@ -1,60 +1,69 @@
 # Project Memory — Tripti
 
 ## Current project state
-- **Current phase:** Phase 0 (Foundation & Tokens), Phase 1 (Auth, Onboarding & Role Dashboards), Phase 2 (Donor Listings, Receiver Needs & <60s Posting Flow), Phase 3 (Location Model, Maps & Route Calculations), and Phase 4 (Matching Engine, Claims & Rescue Order Lifecycle) are **✅ Complete**.
-- **Next phase:** Phase 5 (Volunteer availability polling and delivery verification).
+- **Current phase:** Phase 0 (Foundation & Tokens), Phase 1 (Auth, Onboarding & Role Dashboards), Phase 2 (Donor Listings, Receiver Needs & <60s Posting Flow), Phase 3 (Location Model, Maps & Route Calculations), Phase 4 (Matching Engine, Claims & Rescue Order Lifecycle), and Phase 5 (Volunteer Availability Polling & Delivery Verification) are **✅ Complete**.
+- **Next phase:** Phase 6 (Trigger.dev, email, expiry and notifications).
 - **Last updated:** 2026-11-22
 
 ## What has been built
 
-### 1. Phase 4 — Matching Engine, Assignment and Rescue Order Lifecycle
-- **Data Model & Schema (`db/schema/orders.ts`):**
-  - `rescue_orders`: `id`, `listing_id`, `receiver_id`, `volunteer_id` (nullable), `allocated_portions`, `status` (`pending`, `accepted`, `at_pickup`, `collected`, `at_receiver`, `delivered`, `declined`, `cancelled`, `failed`), `pickup_otp`, `delivery_otp`, `pickup_deadline`, `collected_at`, `delivered_at`, `cancellation_reason`, `match_score`, timestamps.
-  - `delivery_events`: `id`, `order_id`, `event_type` (`order_created`, `assignment_offered`, `assignment_accepted`, `assignment_declined`, `arrived_at_pickup`, `food_collected`, `arrived_at_receiver`, `food_delivered`, `order_cancelled`, `order_reassigned`), `actor_id`, `actor_role`, `notes`, `proof_photo_url`, `created_at`.
-  - Applied migration `db/migrations/0003_aromatic_firelord.sql` to Neon PostgreSQL. All tables verified live in `information_schema.tables`.
+### 1. Phase 5 — Volunteer Availability Polling and Delivery Verification
+- **Architecture & Dependencies:**
+  - Installed and configured `@tanstack/react-query@^5.108.2`.
+  - `lib/query/query-client.ts`: Singleton `makeQueryClient` / `getQueryClient` with `staleTime: 10s`, `refetchInterval: 12s`, `refetchOnWindowFocus: true`, `refetchIntervalInBackground: false`.
+  - `lib/query/query-keys.ts`: Structured query key factories (`orders`, `volunteers`, `map`, `listings`, `receiver`).
+  - `components/providers/query-provider.tsx`: `<QueryProvider>` wrapping application tree inside RootLayout (`app/layout.tsx`).
 
-- **Deterministic Matching Engine (`lib/matching/`):**
-  - `lib/matching/engine.ts`:
-    - Hard eligibility filters: active and unexpired listings (`pickup_by > now`), remaining portion availability, receiver remaining capacity, dietary compatibility (`checkDietaryCompatibility` ensuring strict vegan, vegetarian, halal, and jain rules), volunteer duty availability, volunteer preferred rescue radius, and feasibility of transit before pickup deadline.
-    - Deterministic 4-dimension scoring: `0.35 * distanceSuitability + 0.25 * urgencySuitability + 0.20 * reliability + 0.20 * receiverNeedSuitability`.
-    - Non-overriding Rescue Credit tie-breaker bonus (max +5 points).
-    - Normalized 0-100 score calculation with human-readable explainable rationale.
-  - `lib/orders/otp.ts`: secure 4-digit numeric OTP generation (`generateHandoffOtp`) and verification (`verifyHandoffOtp`) for physical handshakes.
-  - `lib/validations/order.ts`: Zod validation schemas for order creation and state transitions (enforces mandatory OTP for `collected` and `delivered` milestones).
+- **Database Migration (`db/migrations/0004_mushy_amazoness.sql`):**
+  - Updated `rescue_orders` schema (`db/schema/orders.ts`) with:
+    - `pickup_otp_consumed` (boolean, default false): prevents reuse of pickup OTP.
+    - `delivery_otp_consumed` (boolean, default false): prevents reuse of delivery OTP.
+    - `pickup_attempts` (integer, default 0): tracks failed pickup OTP entries.
+    - `delivery_attempts` (integer, default 0): tracks failed delivery OTP entries.
+  - Successfully executed migration against live Neon PostgreSQL over HTTP client.
 
-- **API Route Handlers:**
-  - `POST /api/matching/listings/[listingId]/run`: evaluates candidate receivers and available volunteers, computes match scores and transit times, and returns ranked candidates.
-  - `GET /api/matching/listings/[listingId]/results`: returns ranked match results for dispatch.
-  - `POST /api/rescue-orders`: atomic order creation; validates remaining portions; decrements portions & receiver capacity; generates `pickupOtp` and `deliveryOtp`; audits `order_created`.
-  - `GET /api/rescue-orders`: lists orders with role-based filtering (donors see their listings' orders, receivers see their claims, volunteers see assigned or open orders; masks OTPs so donors only see `pickupOtp` and receivers only see `deliveryOtp`).
-  - `GET /api/rescue-orders/[id]`: order detail with full delivery events timeline and role-filtered OTPs.
-  - `POST /api/rescue-orders/[id]/accept`: volunteer claims assignment with atomic conditional update (`WHERE id = id AND status = 'pending'`); returns 409 Conflict if claimed by another volunteer.
-  - `POST /api/rescue-orders/[id]/decline`: volunteer declines assignment; returns order to pending dispatch queue.
-  - `POST /api/rescue-orders/[id]/cancel`: participant cancellation; restores remaining portions to listing and receiver capacity if not yet collected; releases volunteer.
-  - `POST /api/rescue-orders/[id]/transition`: typed state transitions (`accepted` -> `at_pickup` -> `collected` with pickup OTP -> `at_receiver` -> `delivered` with delivery OTP); awards +50 Rescue Credits on completion and logs immutable audit trail in `delivery_events`.
+- **Dedicated Verification API Endpoints:**
+  - `POST /api/rescue-orders/:id/pickup/verify`:
+    - Validates assigned volunteer or admin identity.
+    - Validates state precondition (`status === 'at_pickup'`).
+    - Enforces brute-force rate limit (max 5 failed attempts, locking with 429 `TOO_MANY_ATTEMPTS`).
+    - Enforces replay protection (rejects already-consumed OTPs with 409 `ALREADY_VERIFIED`).
+    - Advances order to `collected`, updates listing to `in_rescue`, sets `pickupOtpConsumed = true`, and logs audit record in `delivery_events`.
+  - `POST /api/rescue-orders/:id/delivery/verify`:
+    - Validates assigned volunteer or admin identity.
+    - Validates state precondition (`status === 'at_receiver'`).
+    - Enforces brute-force rate limit (max 5 failed attempts, locking with 429 `TOO_MANY_ATTEMPTS`).
+    - Enforces replay protection (rejects already-consumed OTPs with 409 `ALREADY_VERIFIED`).
+    - Advances order to `delivered`, updates listing to `completed`, sets `deliveryOtpConsumed = true`, awards +50 Rescue Credits, and logs audit record in `delivery_events`.
 
-- **UI Components & Workflows:**
-  - `components/donor/matching-dispatch-dialog.tsx`: interactive dispatch dialog on Donor Dashboard; allows running the matching engine on any surplus listing, viewing ranked receivers & volunteers with score breakdown cards, and 1-click dispatching.
-  - `components/volunteer/volunteer-order-console.tsx`: live volunteer console with active delivery stepper (`ACCEPTED` -> `AT PICKUP` -> `COLLECTED` -> `AT RECEIVER` -> `DELIVERED`), status action buttons, OTP verification dialogs, and available rescue opportunities list.
-  - `components/orders/order-tracking-card.tsx`: active orders card for Donor and Receiver dashboards; displays live volunteer courier status and prominently reveals the physical verification OTP (`pickupOtp` for Donors, `deliveryOtp` for Receivers).
-  - Integrated across **Donor Dashboard** (`app/dashboard/donor/page.tsx`), **Receiver Dashboard** (`app/dashboard/receiver/page.tsx`), and **Volunteer Dashboard** (`app/dashboard/volunteer/page.tsx`).
+- **Custom Reactive Hooks & UI Components:**
+  - `hooks/use-polling-query.ts`: Generic polling hook with smart tab visibility handling (`document.visibilityState`), auto-pausing when tab is hidden and refetching immediately upon tab activation; provides `lastUpdated` timestamp and human-friendly `timeAgoText`.
+  - `hooks/use-volunteer-availability.ts`: 12s polling query for volunteer profiles, with optimistic availability toggle (`available` ↔ `offline`) and immediate query invalidation of profile, availability, and map markers.
+  - `hooks/use-active-orders.ts`: 10s polling query for active orders, with built-in mutations for `acceptOrder`, `declineOrder`, `transitionOrder`, `verifyPickup`, and `verifyDelivery`, each automatically triggering multi-query cache invalidation.
+  - `components/shared/live-status-indicator.tsx`: Responsive live status badge with animated green live pulse, stale data warning, offline/error retry indicator, and manual sync action.
+  - Updated `components/volunteer/volunteer-order-console.tsx` to use `useActiveOrders`, replace manual `setInterval`, integrate `LiveStatusIndicator`, and trigger dedicated `/pickup/verify` and `/delivery/verify` endpoints.
+  - Updated `components/orders/order-tracking-card.tsx` to use `useActiveOrders` with `LiveStatusIndicator`.
+  - Updated `components/volunteer/volunteer-location-widget.tsx` to use `useVolunteerAvailability` with optimistic toggle and strict adherence to semantic color tokens.
 
-### 2. Previous Phases (Phases 0 - 3)
-- Phase 0: Foundation, sustainability design tokens in `app/globals.css`, Neon database & Drizzle ORM.
-- Phase 1: Clerk auth, role onboarding (`/onboarding`), split-screen auth, and role dashboards.
-- Phase 2: Donor listings (<60s flow), receiver needs, food metadata, safety notices, and capacity manager.
-- Phase 3: Spatial location model, Haversine distance, Google Maps JS SDK integration, custom role markers, and dual-view radar.
+### 2. Previous Phases (Phases 0 - 4)
+- **Phase 0:** Foundation, sustainability design tokens in `app/globals.css`, Neon database & Drizzle ORM.
+- **Phase 1:** Clerk auth, role onboarding (`/onboarding`), split-screen auth, and role dashboards.
+- **Phase 2:** Donor listings (<60s flow), receiver needs, food metadata, safety notices, and capacity manager.
+- **Phase 3:** Spatial location model, Haversine distance, Google Maps JS SDK integration, custom role markers, and dual-view radar.
+- **Phase 4:** Deterministic 4-dimension matching engine, conditional claiming, OTP generation, order lifecycle, and dispatch dialog.
 
 ## Database / migrations
 - Database: Neon PostgreSQL.
-- Migrations:
+- Migrations applied:
   - `0000_chubby_boomerang.sql` (`users`)
   - `0001_majestic_domino.sql` (`food_listings`, `food_requests`, `listing_reservations`, `receiver_profiles`)
   - `0002_happy_next_avengers.sql` (`volunteer_profiles`)
   - `0003_aromatic_firelord.sql` (`rescue_orders`, `delivery_events`)
-- Live tables verified in `information_schema.tables`.
+  - `0004_mushy_amazoness.sql` (`rescue_orders` columns: `pickup_otp_consumed`, `delivery_otp_consumed`, `pickup_attempts`, `delivery_attempts`)
+- Live tables and schema columns verified.
 
 ## Verification and tests
+- `scripts/test-phase5.mjs`: 27 tests covering Query key factories, schema replay protection columns, attempt counting, 5-attempt rate-limit locking (429), replay prevention (409), delivery verification, and credit awards PASSED (0 failures).
 - `scripts/test-phase4.mjs`: 25 unit, matching engine, dietary constraint, OTP verification, and order schema tests PASSED (0 failures).
 - `scripts/test-phase3.mjs`: 15 spatial, Haversine, ETA, and volunteer validation tests PASSED (0 failures).
 - `scripts/test-phase2.mjs`: 11 business rules and validation tests PASSED (0 failures).
@@ -62,6 +71,6 @@
 - `npm run build`: Production build (`next build --webpack`) PASSED with all static, dynamic API, and partially prerendered dashboard routes.
 
 ## Next phase
-- **Phase 5:** Volunteer availability polling and delivery verification.
-- **Prerequisites:** Phase 4 complete (satisfied).
-- **Reference:** `docs/addons.md` Section "Phase 5 — Volunteer availability polling and delivery verification".
+- **Phase 6:** Trigger.dev, email, expiry and notifications.
+- **Prerequisites:** Phase 5 complete (satisfied).
+- **Reference:** `docs/addons.md` Section "Phase 6 — Trigger.dev, email, expiry and notifications".

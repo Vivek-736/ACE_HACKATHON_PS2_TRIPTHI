@@ -1,21 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
-  AlertTriangle,
   Award,
   CheckCircle2,
-  Clock,
-  Compass,
-  FileText,
   KeyRound,
   MapPin,
   Navigation,
   RefreshCw,
-  ShieldCheck,
   Truck,
-  Users,
-  XCircle,
 } from "lucide-react";
 import {
   Dialog,
@@ -26,27 +19,9 @@ import {
 } from "@/components/ui/dialog";
 import { buttonVariants } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
+import { LiveStatusIndicator } from "@/components/shared/live-status-indicator";
+import { useActiveOrders } from "@/hooks/use-active-orders";
 import type { OrderStatus } from "@/db/schema/orders";
-
-interface RescueOrderView {
-  id: string;
-  listingId: string;
-  receiverId: string;
-  volunteerId?: string | null;
-  allocatedPortions: number;
-  status: OrderStatus;
-  pickupDeadline: string;
-  collectedAt?: string | null;
-  deliveredAt?: string | null;
-  listingTitle?: string;
-  foodCategory?: string;
-  dietType?: string;
-  donorLocation?: string;
-  donorOrganisation?: string;
-  receiverOrganisation?: string;
-  pickupOtp?: string;
-  deliveryOtp?: string;
-}
 
 interface VolunteerOrderConsoleProps {
   volunteerUserId: string;
@@ -57,11 +32,28 @@ export function VolunteerOrderConsole({
   volunteerUserId,
   onRefreshStats,
 }: VolunteerOrderConsoleProps) {
-  const [orders, setOrders] = useState<RescueOrderView[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
+  // Use TanStack Query Hook with 10s auto-polling, visibility pause, and instant mutation invalidation
+  const {
+    orders,
+    isLoading,
+    isError,
+    isStale,
+    lastUpdated,
+    timeAgoText,
+    refetch,
+    acceptOrder,
+    isAccepting,
+    declineOrder,
+    isDeclining,
+    transitionOrder,
+    isTransitioning,
+    verifyPickup,
+    isVerifyingPickup,
+    verifyDelivery,
+    isVerifyingDelivery,
+  } = useActiveOrders("all");
+
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [actionLoading, setActionLoading] = useState(false);
 
   // OTP Verification Modal State
   const [otpModalOpen, setOtpModalOpen] = useState(false);
@@ -71,28 +63,7 @@ export function VolunteerOrderConsole({
   const [otpError, setOtpError] = useState<string | null>(null);
   const [otpSuccessMsg, setOtpSuccessMsg] = useState<string | null>(null);
 
-  const fetchOrders = async () => {
-    try {
-      const res = await fetch("/api/rescue-orders?status=all");
-      const json = await res.json();
-      if (res.ok && json.data) {
-        setOrders(json.data);
-      }
-    } catch (err) {
-      console.error("Failed to fetch volunteer orders:", err);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchOrders();
-    const interval = setInterval(fetchOrders, 12000); // Polling every 12 seconds
-    return () => clearInterval(interval);
-  }, []);
-
-  // Separate active order vs available opportunities
+  // Filter active in-flight order vs open opportunities
   const activeOrder = orders.find(
     (o) =>
       o.volunteerId === volunteerUserId &&
@@ -103,67 +74,40 @@ export function VolunteerOrderConsole({
     (o) => o.status === "pending" && !o.volunteerId
   );
 
+  const isActionBusy =
+    isAccepting ||
+    isDeclining ||
+    isTransitioning ||
+    isVerifyingPickup ||
+    isVerifyingDelivery;
+
   const handleAcceptAssignment = async (orderId: string) => {
-    setActionLoading(true);
     setErrorMsg(null);
     try {
-      const res = await fetch(`/api/rescue-orders/${orderId}/accept`, {
-        method: "POST",
-      });
-      const json = await res.json();
-      if (!res.ok) {
-        throw new Error(json?.error?.message || "Failed to accept rescue assignment");
-      }
-      fetchOrders();
+      await acceptOrder(orderId);
       if (onRefreshStats) onRefreshStats();
     } catch (err: unknown) {
       setErrorMsg(err instanceof Error ? err.message : "Error accepting assignment");
-    } finally {
-      setActionLoading(false);
     }
   };
 
   const handleDeclineAssignment = async (orderId: string) => {
     if (!confirm("Are you sure you want to decline and release this rescue assignment?")) return;
-    setActionLoading(true);
     setErrorMsg(null);
     try {
-      const res = await fetch(`/api/rescue-orders/${orderId}/decline`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ reason: "Volunteer declined from console" }),
-      });
-      const json = await res.json();
-      if (!res.ok) {
-        throw new Error(json?.error?.message || "Failed to decline assignment");
-      }
-      fetchOrders();
+      await declineOrder({ orderId, reason: "Volunteer declined from console" });
       if (onRefreshStats) onRefreshStats();
     } catch (err: unknown) {
       setErrorMsg(err instanceof Error ? err.message : "Error declining assignment");
-    } finally {
-      setActionLoading(false);
     }
   };
 
   const handleSimpleTransition = async (orderId: string, targetStatus: OrderStatus) => {
-    setActionLoading(true);
     setErrorMsg(null);
     try {
-      const res = await fetch(`/api/rescue-orders/${orderId}/transition`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: targetStatus }),
-      });
-      const json = await res.json();
-      if (!res.ok) {
-        throw new Error(json?.error?.message || "Failed to advance order milestone");
-      }
-      fetchOrders();
+      await transitionOrder({ orderId, status: targetStatus });
     } catch (err: unknown) {
       setErrorMsg(err instanceof Error ? err.message : "Error transitioning order");
-    } finally {
-      setActionLoading(false);
     }
   };
 
@@ -180,39 +124,29 @@ export function VolunteerOrderConsole({
     e.preventDefault();
     if (!otpTargetOrderId) return;
 
-    setActionLoading(true);
     setOtpError(null);
 
     try {
-      const res = await fetch(`/api/rescue-orders/${otpTargetOrderId}/transition`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          status: otpTargetStatus,
+      if (otpTargetStatus === "collected") {
+        await verifyPickup({
+          orderId: otpTargetOrderId,
           otp: submittedOtp.trim(),
-        }),
-      });
-
-      const json = await res.json();
-      if (!res.ok) {
-        throw new Error(json?.error?.message || "Invalid handoff OTP code");
+        });
+        setOtpSuccessMsg("Food pickup verified! Please transport carefully to receiver.");
+      } else {
+        await verifyDelivery({
+          orderId: otpTargetOrderId,
+          otp: submittedOtp.trim(),
+        });
+        setOtpSuccessMsg("Delivery completed! 50 Rescue Credits awarded to your account.");
       }
-
-      setOtpSuccessMsg(
-        otpTargetStatus === "collected"
-          ? "Food pickup verified! Please transport carefully to receiver."
-          : "Delivery completed! 50 Rescue Credits awarded to your account."
-      );
 
       setTimeout(() => {
         setOtpModalOpen(false);
-        fetchOrders();
         if (onRefreshStats) onRefreshStats();
       }, 1500);
     } catch (err: unknown) {
       setOtpError(err instanceof Error ? err.message : "Error validating handoff OTP");
-    } finally {
-      setActionLoading(false);
     }
   };
 
@@ -230,6 +164,26 @@ export function VolunteerOrderConsole({
 
   return (
     <div className="space-y-6">
+      {/* Live Polling Status Bar */}
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-card p-3 shadow-xs">
+        <div className="flex items-center gap-2">
+          <Truck className="size-4 text-primary" />
+          <span className="text-xs font-semibold text-foreground">
+            Rescue Missions &amp; Opportunity Dispatch
+          </span>
+        </div>
+
+        <LiveStatusIndicator
+          lastUpdated={lastUpdated}
+          timeAgoText={timeAgoText}
+          isStale={isStale}
+          isError={isError}
+          isLoading={isLoading}
+          onRefresh={() => refetch()}
+          label="Live Dispatch"
+        />
+      </div>
+
       {errorMsg && (
         <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-xs text-destructive">
           {errorMsg}
@@ -255,7 +209,7 @@ export function VolunteerOrderConsole({
 
             <button
               onClick={() => handleDeclineAssignment(activeOrder.id)}
-              disabled={actionLoading || activeOrder.status === "collected" || activeOrder.status === "at_receiver"}
+              disabled={isActionBusy || activeOrder.status === "collected" || activeOrder.status === "at_receiver"}
               className="text-xs text-muted-foreground hover:text-destructive underline disabled:opacity-40"
             >
               Release / Decline
@@ -319,11 +273,15 @@ export function VolunteerOrderConsole({
             {activeOrder.status === "accepted" && (
               <button
                 type="button"
-                disabled={actionLoading}
+                disabled={isActionBusy}
                 onClick={() => handleSimpleTransition(activeOrder.id, "at_pickup")}
                 className={`${buttonVariants({ size: "default" })} gap-1.5`}
               >
-                <MapPin className="size-4" />
+                {isTransitioning ? (
+                  <Spinner className="size-4" />
+                ) : (
+                  <MapPin className="size-4" />
+                )}
                 <span>Arrived at Donor Facility</span>
               </button>
             )}
@@ -331,7 +289,7 @@ export function VolunteerOrderConsole({
             {activeOrder.status === "at_pickup" && (
               <button
                 type="button"
-                disabled={actionLoading}
+                disabled={isActionBusy}
                 onClick={() => openOtpModal(activeOrder.id, "collected")}
                 className={`${buttonVariants({ size: "default" })} gap-1.5`}
               >
@@ -343,11 +301,15 @@ export function VolunteerOrderConsole({
             {activeOrder.status === "collected" && (
               <button
                 type="button"
-                disabled={actionLoading}
+                disabled={isActionBusy}
                 onClick={() => handleSimpleTransition(activeOrder.id, "at_receiver")}
                 className={`${buttonVariants({ size: "default" })} gap-1.5`}
               >
-                <Truck className="size-4" />
+                {isTransitioning ? (
+                  <Spinner className="size-4" />
+                ) : (
+                  <Truck className="size-4" />
+                )}
                 <span>Arrived at Receiver Destination</span>
               </button>
             )}
@@ -355,7 +317,7 @@ export function VolunteerOrderConsole({
             {activeOrder.status === "at_receiver" && (
               <button
                 type="button"
-                disabled={actionLoading}
+                disabled={isActionBusy}
                 onClick={() => openOtpModal(activeOrder.id, "delivered")}
                 className={`${buttonVariants({ size: "default" })} gap-1.5`}
               >
@@ -383,19 +345,16 @@ export function VolunteerOrderConsole({
           </div>
 
           <button
-            onClick={() => {
-              setRefreshing(true);
-              fetchOrders();
-            }}
-            disabled={refreshing}
+            onClick={() => refetch()}
+            disabled={isLoading}
             className="flex items-center gap-1 rounded-md border border-border bg-card px-2.5 py-1 text-xs text-foreground hover:bg-muted/30"
           >
-            <RefreshCw className={`size-3 ${refreshing ? "animate-spin" : ""}`} />
+            <RefreshCw className={`size-3 ${isLoading ? "animate-spin" : ""}`} />
             <span>Refresh</span>
           </button>
         </div>
 
-        {loading ? (
+        {isLoading && orders.length === 0 ? (
           <div className="flex min-h-[140px] items-center justify-center gap-2 text-xs text-muted-foreground">
             <Spinner className="size-4 text-primary" />
             <span>Checking nearby opportunities&hellip;</span>
@@ -442,11 +401,15 @@ export function VolunteerOrderConsole({
 
                 <button
                   type="button"
-                  disabled={actionLoading || !!activeOrder}
+                  disabled={isActionBusy || !!activeOrder}
                   onClick={() => handleAcceptAssignment(op.id)}
                   className={`${buttonVariants({ size: "sm" })} gap-1 self-end sm:self-auto`}
                 >
-                  <Truck className="size-3.5" />
+                  {isAccepting ? (
+                    <Spinner className="size-3.5" />
+                  ) : (
+                    <Truck className="size-3.5" />
+                  )}
                   <span>Accept Rescue</span>
                 </button>
               </div>
@@ -518,10 +481,10 @@ export function VolunteerOrderConsole({
               </button>
               <button
                 type="submit"
-                disabled={actionLoading || !!otpSuccessMsg}
+                disabled={isActionBusy || !!otpSuccessMsg}
                 className={`${buttonVariants({ size: "default" })} gap-1.5`}
               >
-                {actionLoading ? (
+                {isVerifyingPickup || isVerifyingDelivery ? (
                   <Spinner className="size-4" />
                 ) : (
                   <CheckCircle2 className="size-4" />

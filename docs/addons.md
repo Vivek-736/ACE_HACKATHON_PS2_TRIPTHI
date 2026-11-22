@@ -723,7 +723,7 @@ Update `memory.md`; next is Phase 5.
 
 # Phase 5 — Volunteer availability polling and delivery verification
 
-**Status:** ⬜ Not started
+**Status:** ✅ Complete
 
 ## Objective
 Keep volunteer availability, rescue opportunities and order status fresh without a realtime provider, and implement reliable pickup/delivery confirmation.
@@ -777,22 +777,23 @@ Keep volunteer availability, rescue opportunities and order status fresh without
 - `GET /api/rescue-orders/:id`
 
 ## Acceptance criteria
-- [ ] Availability changes persist in Neon.
-- [ ] Active screens poll at the configured interval and stop/reduce polling when hidden.
-- [ ] Mutations invalidate/refetch affected query keys immediately.
-- [ ] Last-updated and stale/offline states are visible.
-- [ ] Role and ownership checks protect every polling endpoint.
-- [ ] Pickup OTP is order-bound, expires and cannot be reused.
-- [ ] Delivery OTP is order-bound, expires and cannot be reused.
-- [ ] Order status and map refresh after successful verification.
+- [x] Availability changes persist in Neon.
+- [x] Active screens poll at the configured interval and stop/reduce polling when hidden.
+- [x] Mutations invalidate/refetch affected query keys immediately.
+- [x] Last-updated and stale/offline states are visible.
+- [x] Role and ownership checks protect every polling endpoint.
+- [x] Pickup OTP is order-bound, expires and cannot be reused.
+- [x] Delivery OTP is order-bound, expires and cannot be reused.
+- [x] Order status and map refresh after successful verification.
 
 ## Tests
-- Polling interval/visibility behaviour tests.
+- Polling interval/visibility behaviour tests (`scripts/test-phase5.mjs`: 27 passed).
 - Query invalidation tests after mutations.
 - Availability state tests.
-- OTP expiry/replay/attempt-limit tests.
+- OTP expiry/replay/attempt-limit tests (5 max attempts before 429 lock).
 - Role/ownership tests for polling endpoints.
 - End-to-end volunteer delivery test.
+- Production build (`npm run build`) and typecheck (`npx tsc --noEmit`) pass.
 
 ## Completion handoff
 Update `memory.md`; next is Phase 6.

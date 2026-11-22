@@ -3,6 +3,7 @@ import {
   uuid,
   text,
   integer,
+  boolean,
   numeric,
   timestamp,
 } from "drizzle-orm/pg-core";
@@ -60,6 +61,10 @@ export const rescueOrders = pgTable("rescue_orders", {
   status: text("status", { enum: ORDER_STATUSES }).notNull().default("pending"),
   pickupOtp: text("pickup_otp").notNull(),
   deliveryOtp: text("delivery_otp").notNull(),
+  pickupOtpConsumed: boolean("pickup_otp_consumed").notNull().default(false),
+  deliveryOtpConsumed: boolean("delivery_otp_consumed").notNull().default(false),
+  pickupAttempts: integer("pickup_attempts").notNull().default(0),
+  deliveryAttempts: integer("delivery_attempts").notNull().default(0),
   pickupDeadline: timestamp("pickup_deadline", { withTimezone: true }).notNull(),
   collectedAt: timestamp("collected_at", { withTimezone: true }),
   deliveredAt: timestamp("delivered_at", { withTimezone: true }),

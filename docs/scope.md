@@ -192,8 +192,8 @@ Browser / Next.js UI
 | VolunteerProfile | User ID, availability, preferred radius, reliability metrics |
 | FoodListing | Donor, food type, portions/weight, preparation time, storage, allergens, deadline, coordinates, status |
 | FoodRequest | Receiver, requested quantity, dietary needs, preferred time |
-| RescueOrder | Listing, receiver, volunteer, assignment state, timestamps |
-| DeliveryEvent | Order, event type, actor, timestamp, proof reference |
+| RescueOrder | Listing, receiver, volunteer, allocated portions, status, pickup/delivery OTPs, consumed flags (`pickup_otp_consumed`, `delivery_otp_consumed`), attempt counters (`pickup_attempts`, `delivery_attempts`), deadlines, timestamps |
+| DeliveryEvent | Order ID, event type (`order_created`, `assignment_accepted`, `food_collected`, `food_delivered`, etc.), actor ID, actor role, notes, proof reference, timestamp |
 | RescueCreditLedger | Volunteer, points delta, reason, linked order |
 | PaymentLedger | Payer, payee, purpose, amount, status, provider reference |
 | ImpactRecord | Completed order, portions, weight, calculation version and assumptions |
@@ -227,15 +227,31 @@ Weights must be configurable and documented, not embedded in UI code.
 
 ## 9. Order lifecycle
 
-Suggested listing states:
+Implemented listing states:
 `DRAFT → AVAILABLE → RESERVED → IN_RESCUE → COMPLETED`
 Alternative terminal states: `EXPIRED`, `CANCELLED`, `UNAVAILABLE`.
 
-Suggested assignment states:
+Implemented assignment states:
 `PENDING → ACCEPTED → AT_PICKUP → COLLECTED → AT_RECEIVER → DELIVERED`
 Alternative terminal states: `DECLINED`, `CANCELLED`, `FAILED`, `EXPIRED`.
 
-Record state transitions as events with actor, timestamp and reason. Use atomic conditional updates so two volunteers cannot claim the same assignment. A listing can have multiple partial allocations only if that behaviour is deliberately implemented and quantity accounting is transaction-safe; MVP may use one receiver/order per listing to reduce complexity.
+### Physical Handshake Protocol & Security:
+1. **Donor Pickup Handshake:**
+   - Pre-condition: order status must be `AT_PICKUP`.
+   - Endpoint: `POST /api/rescue-orders/:id/pickup/verify`.
+   - Donor presents 4-digit numeric code (`pickupOtp`); volunteer inputs it into console.
+   - Enforces brute-force rate limit (maximum 5 attempts before locking with 429 `TOO_MANY_ATTEMPTS`).
+   - Replay protection prevents re-use (`pickup_otp_consumed` flag; 409 `ALREADY_VERIFIED`).
+   - Transitions order to `COLLECTED`, sets listing to `IN_RESCUE`, and records `food_collected` event in `delivery_events`.
+2. **Receiver Delivery Handshake:**
+   - Pre-condition: order status must be `AT_RECEIVER`.
+   - Endpoint: `POST /api/rescue-orders/:id/delivery/verify`.
+   - Receiver shelter presents 4-digit numeric code (`deliveryOtp`); volunteer inputs it into console.
+   - Enforces brute-force rate limit (maximum 5 attempts before locking with 429 `TOO_MANY_ATTEMPTS`).
+   - Replay protection prevents re-use (`delivery_otp_consumed` flag; 409 `ALREADY_VERIFIED`).
+   - Transitions order to `DELIVERED`, sets listing to `COMPLETED`, awards +50 Rescue Credits to volunteer, and records `food_delivered` event in `delivery_events`.
+
+Record state transitions as immutable events in `delivery_events` with actor, timestamp, notes, and proof reference. Use atomic conditional updates so two volunteers cannot claim the same assignment (409 Conflict protection). Server state polling (10–12s) via TanStack Query automatically refreshes dashboards, while mutations trigger immediate multi-query cache invalidation.
 
 ## 10. Impact calculations
 
@@ -275,10 +291,10 @@ Update this table at the end of every phase. Do not mark a phase complete until 
 | 2 | Donor listings, receiver needs, food metadata | ✅ Complete | Listing created in <60 seconds via `QuickPostDialog` with 1-click presets; Zod validation with strict time-window, positive portions, mandatory allergens and storage rules; tables `food_listings`, `food_requests`, `listing_reservations`, `receiver_profiles` live in Neon DB; REST routes `/api/listings`, `/api/listings/[id]`, `/api/listings/[id]/cancel`, `/api/listings/[id]/requests`, `/api/food-requests`, `/api/receiver/profile`; receiver discover and reservation flow with capacity check; test suite `scripts/test-phase2.mjs` (11 passed); `npx tsc --noEmit` and `npm run build` pass. |
 | 3 | Neon/PostGIS location model, Google Maps and Routes | ✅ Complete | Haversine distance, bounding box, and ETA calculation in `lib/maps/haversine.ts`; `volunteer_profiles` live in Neon DB (migration `0002_happy_next_avengers.sql`); API endpoints `/api/map/markers`, `/api/locations/nearby`, `/api/volunteers/location`, `/api/volunteers/availability`, `/api/volunteers/profile`; interactive Google Maps component `RescueMap` with custom SVG role pins and brand styling, accessible dual-view toggle `MapDualView`, and `RouteCard` preview; volunteer staging control `VolunteerLocationWidget`; integrated across Volunteer, Receiver, and Donor dashboards; test suite `scripts/test-phase3.mjs` (15 passed); `npx tsc --noEmit` passes cleanly. |
 | 4 | Matching engine, claims and rescue order lifecycle | ✅ Complete | Deterministic matching engine in `lib/matching/engine.ts` with 4-dimension scoring (distance, urgency, reliability, need fit) & tie-breakers; hard eligibility checks for deadlines, dietary constraints & capacity; tables `rescue_orders` and `delivery_events` live in Neon DB (migration `0003_aromatic_firelord.sql`); atomic conditional claiming (409 Conflict protection); secure handoff OTP verification (`generateHandoffOtp`, `verifyHandoffOtp`); REST routes `/api/matching/listings/[listingId]/run`, `/api/matching/listings/[listingId]/results`, `/api/rescue-orders`, `/api/rescue-orders/[id]`, `/api/rescue-orders/[id]/accept`, `/api/rescue-orders/[id]/decline`, `/api/rescue-orders/[id]/cancel`, `/api/rescue-orders/[id]/transition`; UI components `MatchingDispatchDialog`, `VolunteerOrderConsole`, and `OrderTrackingCard`; test suite `scripts/test-phase4.mjs` (25 passed); `npx tsc --noEmit` and `npm run build` pass. |
-| 5 | Volunteer availability polling and delivery tracking | ⬜ Not started | Polling/refetch states and OTP lifecycle work |
-| 6 | Trigger.dev, email, expiry and notifications | ⬜ Not started | Scheduled expiry/reminders verified |
-| 7 | Impact, Rescue Credits, admin and business model demo | ⬜ Not started | Impact formulas and ledger visible |
-| 8 | QA, accessibility, security, demo seed data and deployment | ⬜ Not started | End-to-end demo and deployment checks pass |
+| 5 | Volunteer availability polling and delivery tracking | ✅ Complete | TanStack Query (`@tanstack/react-query`) polling architecture for server state (10–12s polling interval) with smart tab visibility pause/resume via `document.visibilityState`; instant cache invalidation upon state mutations (`acceptOrder`, `declineOrder`, `transitionOrder`, `verifyPickup`, `verifyDelivery`); `LiveStatusIndicator` displaying real-time ping, stale warning, offline retry, and manual sync; replay prevention (`pickup_otp_consumed`, `delivery_otp_consumed`) and attempt limiting (5 attempts max before 429 lock) migrated to Neon DB (`0004_mushy_amazoness.sql`); dedicated endpoints `/api/rescue-orders/:id/pickup/verify` and `/api/rescue-orders/:id/delivery/verify`; test suite `scripts/test-phase5.mjs` (27 passed); `npx tsc --noEmit` and `npm run build` pass. |
+| 6 | Trigger.dev background jobs, scheduled food expiry, pickup window reminders, in-app notification center, Nodemailer transactional email delivery | ⬜ Not started | Scheduled expiry/reminders verified |
+| 7 | Impact dashboard (meals saved, waste avoided, CO2e averted with visible calculation assumptions), Rescue Credits ledger, Platform Admin moderation & dispute desk, Razorpay test mode/sponsorship checkout | ⬜ Not started | Impact formulas and ledger visible |
+| 8 | End-to-end integration QA, Playwright test suite, accessibility & screen reader audit, synthetic demo seeders, Vercel production deployment & environment verification | ⬜ Not started | End-to-end demo and deployment checks pass |
 
 ### Phase status vocabulary
 - `⬜ Not started`
