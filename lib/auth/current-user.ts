@@ -5,6 +5,13 @@ import { users, type User, type UserRole } from "@/db/schema";
 
 export type CurrentUser = User;
 
+const ADMIN_EMAILS = [
+  "vivek338614@gmail.com",
+  process.env.ADMIN_EMAIL,
+]
+  .filter(Boolean)
+  .map((e) => e!.toLowerCase().trim());
+
 // Returns the signed-in user's database row, or null when signed out.
 // Identity comes only from Clerk's server-side auth().
 export async function getCurrentUser(): Promise<CurrentUser | null> {
@@ -19,6 +26,19 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
       .limit(1);
 
     if (rows[0]) {
+      // Auto-promote designated admin email to admin role
+      if (
+        rows[0].email &&
+        ADMIN_EMAILS.includes(rows[0].email.toLowerCase().trim()) &&
+        rows[0].role !== "admin"
+      ) {
+        const [updated] = await db
+          .update(users)
+          .set({ role: "admin", updatedAt: new Date() })
+          .where(eq(users.id, rows[0].id))
+          .returning();
+        return updated ?? rows[0];
+      }
       return rows[0];
     }
 
@@ -30,6 +50,7 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
     const firstName = clerkUser.firstName ?? null;
     const lastName = clerkUser.lastName ?? null;
     const imageUrl = clerkUser.imageUrl ?? null;
+    const isAdmin = email ? ADMIN_EMAILS.includes(email.toLowerCase().trim()) : false;
 
     const inserted = await db
       .insert(users)
@@ -39,10 +60,18 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
         firstName,
         lastName,
         imageUrl,
+        role: isAdmin ? "admin" : "unassigned",
       })
       .onConflictDoUpdate({
         target: users.clerkId,
-        set: { email, firstName, lastName, imageUrl, updatedAt: new Date() },
+        set: {
+          email,
+          firstName,
+          lastName,
+          imageUrl,
+          ...(isAdmin ? { role: "admin" } : {}),
+          updatedAt: new Date(),
+        },
       })
       .returning();
 

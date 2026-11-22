@@ -5,6 +5,7 @@
 ## How to use this document
 
 For each phase:
+
 1. Read the objective, prerequisites, recommended skills, environment variables, implementation slices, API contracts, data changes, tests and acceptance criteria.
 2. Confirm required external accounts and credentials exist.
 3. Install/read the relevant agent skills for the tools actually used. Do not install every skill at once.
@@ -17,6 +18,7 @@ For each phase:
 “Skills” here means the coding-agent instruction packs or official documentation skills available in the developer's chosen agent environment (for example, Claude Code, Cursor or another coding agent). Skill names and install commands differ by agent and can change. Do not invent a package name or install command. Prefer official, maintained skills/docs from the relevant vendor. If no reliable skill exists, use the official documentation and record that no skill was installed.
 
 Recommended skill topics:
+
 - Next.js App Router / React Server Components
 - TypeScript
 - Tailwind CSS and shadcn/ui
@@ -34,7 +36,9 @@ Recommended skill topics:
 ## 0. Shared conventions
 
 ### Environment files
+
 Maintain:
+
 - `.env.example` — variable names and safe placeholders.
 - `.env.local` — local secrets, ignored by Git.
 - Vercel environment settings — deployment secrets.
@@ -84,6 +88,7 @@ RAZORPAY_WEBHOOK_SECRET=
 ```
 
 Notes:
+
 - `DATABASE_URL` must be the Neon connection string. Use the pooled connection string for serverless runtime where appropriate and a direct connection string for migration tooling if the provider recommends it. If using two URLs, name them explicitly, e.g. `DATABASE_URL` and `DATABASE_URL_UNPOOLED`.
 - Use exactly one Google Maps key: `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY`. It is necessarily visible in the browser, so restrict it to the development/production HTTP referrers and only Maps JavaScript API, Places API and Routes API. Keep all Google calls in browser-loaded Maps JavaScript libraries; do not call Google web services from Next.js Route Handlers and do not create a server key.
 - No realtime-provider credentials are used. TanStack Query polling and query invalidation provide near-live updates for the MVP.
@@ -92,17 +97,25 @@ Notes:
 - Never add keys for integrations not used in the current phase.
 
 ### Standard API response convention
+
 Use a consistent JSON shape:
+
 ```ts
 type ApiSuccess<T> = { data: T; error: null };
 type ApiFailure = {
   data: null;
-  error: { code: string; message: string; fieldErrors?: Record<string, string[]> };
+  error: {
+    code: string;
+    message: string;
+    fieldErrors?: Record<string, string[]>;
+  };
 };
 ```
+
 Use appropriate HTTP status codes. Do not leak stack traces, provider secrets or internal database errors.
 
 ### API conventions
+
 - Validate all request bodies and query parameters with Zod.
 - Authenticate with Clerk server-side.
 - Authorize by role and resource ownership.
@@ -115,6 +128,7 @@ Use appropriate HTTP status codes. Do not leak stack traces, provider secrets or
 - Document any deviation.
 
 ### UI design system checklist
+
 - All colours in `src/app/globals.css` CSS variables.
 - Brand palette: warm ivory background, deep forest-green primary, leaf-green secondary, harvest-amber accent, restrained coral for urgent/attention states, and neutral ink/surface tokens.
 - Use this same semantic palette across the public landing page, shared components, role dashboards, admin screens, charts and map controls; do not invent per-page palettes.
@@ -132,9 +146,11 @@ Use appropriate HTTP status codes. Do not leak stack traces, provider secrets or
 **Status:** 🟡 In progress — partial. Files written for the Drizzle config, `users` schema, Neon client and `.env.example`. NOT compiled, linted, run, connected or migrated. Typecheck, lint, build, app start, Neon connection and migration checks are NOT verified. See `memory.md`.
 
 ## Objective
+
 Create a stable Next.js project foundation, design-token system, environment validation, database connectivity and clean module boundaries before implementing product features.
 
 ## Prerequisites
+
 - Node.js version compatible with the selected Next.js release.
 - Package manager selected and pinned (npm/pnpm/bun; use one consistently).
 - Git repository created.
@@ -142,21 +158,25 @@ Create a stable Next.js project foundation, design-token system, environment val
 - Clerk application may be created now or in Phase 1.
 
 ## Skills/docs to install or read
+
 - Next.js App Router skill/docs.
 - TypeScript skill/docs.
 - Tailwind CSS skill/docs.
 - shadcn/ui skill/docs.
 - Neon and Drizzle ORM docs/skill.
 - Zod docs.
-If a skill is unavailable, use the official docs.
+  If a skill is unavailable, use the official docs.
 
 ## Environment variables
+
 - `NEXT_PUBLIC_APP_URL`
 - `DATABASE_URL`
 - Optional `DATABASE_URL_UNPOOLED` if migrations need a direct connection.
 
 ## Build slices
+
 ### 0.1 Project bootstrap
+
 - Create Next.js App Router application with TypeScript and strict mode.
 - Add Tailwind CSS and shadcn/ui.
 - Establish import aliases.
@@ -165,6 +185,7 @@ If a skill is unavailable, use the official docs.
 - Create a minimal root layout and route.
 
 ### 0.2 Design system
+
 - Create `src/app/globals.css`.
 - Use this initial light-theme palette as the source of truth (HSL channel values, not component-level literals):
 
@@ -215,20 +236,24 @@ If a skill is unavailable, use the official docs.
 - Ensure no raw palette classes or component-level colour literals.
 
 ### 0.3 Architecture scaffold
+
 - Create `src/features`, `src/server/services`, `src/server/repositories`, `src/server/policies`, `src/lib`, `src/db/schema`, `src/db/migrations`. In `src/lib`, use `query/` for TanStack Query setup; do not scaffold a realtime/Ably client.
 - Add environment validation module. Fail fast with clear variable names when a required variable is absent.
 - Add database client and Drizzle config.
 - Add health endpoint that reports app readiness without exposing secrets.
 
 ### 0.4 Neon connection
+
 - Create a minimal schema/migration only if needed for connection verification.
 - Verify local connection.
 - Confirm migration command works.
 
 ## Suggested API
+
 - `GET /api/health` — app/database readiness. Do not expose connection details.
 
 ## Acceptance criteria
+
 - [ ] App starts locally.
 - [ ] Lint and typecheck pass.
 - [ ] `globals.css` owns all colour tokens and the brand palette is documented.
@@ -240,12 +265,14 @@ If a skill is unavailable, use the official docs.
 - [ ] `AGENTS.md`, `scope.md`, `addons.md` remain current.
 
 ## Tests
+
 - Environment validation tests.
 - Health route test.
 - Database connection smoke test.
 - Design token / lint review.
 
 ## Completion handoff
+
 Update `scope.md` Phase 0 to complete and root `memory.md` with scaffold, scripts, DB setup, variables, tests and Phase 1 as next.
 
 ---
@@ -259,6 +286,7 @@ Update `scope.md` Phase 0 to complete and root `memory.md` with scaffold, script
 **Not built:** role dashboards for donor, receiver, volunteer and admin. A successful onboarding redirects to `/dashboard/<role>`, which has no page yet and returns 404.
 
 **Decisions**
+
 - Zod-only forms (user decision). React Hook Form and `@hookform/resolvers` are not installed; onboarding uses plain React state with Zod validation. Spec wording that names React Hook Form remains open.
 - Role dashboards deferred (user decision).
 - Admin is never self-assigned: the role API accepts only donor, receiver and volunteer, and the sync route never writes `role`.
@@ -267,14 +295,17 @@ Update `scope.md` Phase 0 to complete and root `memory.md` with scaffold, script
 Acceptance criteria below remain unticked: none is verified, and Phase 1 is not complete.
 
 ## Objective
+
 Allow donors, receivers and volunteers to register, complete role-specific onboarding and access only their own dashboard. Add an admin role for internal demo operations.
 
 ## Prerequisites
+
 - Phase 0 complete.
 - Clerk application created.
 - Neon/Drizzle connection working.
 
 ## Skills/docs to install or read
+
 - Clerk Next.js App Router skill/docs.
 - Next.js authentication and middleware/proxy guidance.
 - Drizzle schema/migration docs.
@@ -282,6 +313,7 @@ Allow donors, receivers and volunteers to register, complete role-specific onboa
 - shadcn/ui forms, dialogs, tabs and navigation docs.
 
 ## Environment variables
+
 - `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`
 - `CLERK_SECRET_KEY`
 - `CLERK_SIGN_IN_URL`
@@ -291,6 +323,7 @@ Allow donors, receivers and volunteers to register, complete role-specific onboa
 - `DATABASE_URL`
 
 ## Data model
+
 - `users`: Clerk user ID, email, display name, role, account status, created/updated timestamps.
 - `organisations`: legal/display name, type, verification status, contact metadata.
 - `donor_profiles`: organisation relation and operational profile.
@@ -300,7 +333,7 @@ Allow donors, receivers and volunteers to register, complete role-specific onboa
 
 Use unique constraints on Clerk IDs and organisation membership. Decide whether one user can hold multiple roles; MVP recommendation is one active role per account, with future role switching only if explicitly supported.
 
-## Public landing page (Tripthi) — required implementation slice
+## Public landing page (Tripti) — required implementation slice
 
 **Status:** ✅ Complete — signed off by the user. Executed checks: `npm run build` PASSED (`/` prerenders as static; the earlier `new Date()` prerender error in `Footer.tsx` no longer occurs); `npx tsc --noEmit` PASSED across the project. `npm run lint` FAILED repo-wide (exit 1); the errors are in files outside the landing work (see below), and ESLint is clean on the landing components, `app/page.tsx`, `app/layout.tsx` and `next.config.ts`. The project has no test script. The acceptance checkboxes below are not ticked individually: the browser, responsive, accessibility and icon checks listed under "Verification record" were not run, and the user's sign-off accepts that gap.
 
@@ -313,15 +346,18 @@ This slice supersedes the earlier Discover/About/Impact wording and the earlier 
 **Verification record**
 
 Executed (passed):
+
 - `npm run build` PASSED. The `/` route prerenders as static. The earlier `new Date()` during-prerender error (`Footer.tsx`) no longer occurs.
 - `npx tsc --noEmit` PASSED across the project.
 
 Executed (failed, out of scope):
+
 - `npm run lint` FAILED repo-wide (exit 1). Errors, all `react-hooks/set-state-in-effect`: `components/ui/carousel.tsx:98`, `components/ui/liquid-glass.tsx:114`, `hooks/use-mobile.ts:14`. Warning: `components/ui/input-group.tsx:59`. ESLint on the landing components, `app/page.tsx`, `app/layout.tsx` and `next.config.ts` was clean. Not yet determined whether these errors predate the landing work.
 
 Not run: the project has no test script, so there are no automated tests.
 
 Not verified (recorded, not dropped):
+
 - No browser check of the landing page: layout, mobile/tablet/desktop responsiveness, the dashboard preview's no-overflow at 375px, and the scrollbar and smooth-scroll behaviour. These are CSS-only and unobserved.
 - No keyboard or accessibility audit beyond the focus-ring classes written in.
 - Lucide icon names are not all checked against `node_modules`. The build passing implies the imports resolve, but icon-only checks are unconfirmed.
@@ -332,21 +368,24 @@ Not verified (recorded, not dropped):
 - `public/images/` is not used by the landing page. `next.config.ts` still allows `images.unsplash.com` and `images.pexels.com` (harmless, unused).
 
 ### Messaging
+
 - **Central idea:** "Good food deserves a better destination."
 - **Trust line:** "Less waste. More meals. Stronger communities."
 - **Purpose:** a coordinated food-rescue ecosystem. Donors publish surplus food, receivers (NGOs, shelters, community kitchens) discover suitable donations, volunteers handle transport, and verified deliveries feed measurable impact. It is not merely a donation listing site.
 - **Workflow:** share surplus → find what the community needs → volunteer rescues and delivers → verified delivery → impact.
 
 ### Visual direction
+
 - Minimal white/ivory navbar with generous whitespace and a clean SaaS-style product-page layout.
 - Centred hero with a pill badge reading "FOOD RESCUE, REIMAGINED".
 - Large, bold headline: "Good food deserves / a better destination." The second line is set in forest-green primary.
-- Tripthi uses its own forest-green, leaf-green, warm ivory and harvest-amber tokens. Do not use any other product's palette or branding.
+- Tripti uses its own forest-green, leaf-green, warm ivory and harvest-amber tokens. Do not use any other product's palette or branding.
 - **No photographs, background images, videos, stock or external visual assets.** All visuals are CSS, typography and `lucide-react` icons.
 
 ### Page sections (in this order)
-1. **Navbar:** minimal white/ivory bar with the Tripthi logo and wordmark (`public/logo.svg` emblem). Links: Home (`#top`), How It Works (`#how-it-works`), Features (`#features`), Impact (`#impact`). Actions: Sign In (`/sign-in`) and Get Started (`/sign-up`). Mobile menu: a labelled button with `aria-expanded` and `aria-controls`; Escape closes the menu and focus returns to the button.
-2. **Hero:** centred layout. Pill badge "FOOD RESCUE, REIMAGINED". Headline: "Good food deserves / a better destination." (second line in forest-green primary). Supporting line: "Tripthi connects food donors, community organisations, and volunteers to rescue surplus food and deliver it where it matters most." CTAs: "Start Rescuing" (primary, `/sign-up`) and "Explore How It Works" (outline, `#how-it-works`). Trust line: "Less waste. More meals. Stronger communities."
+
+1. **Navbar:** minimal white/ivory bar with the Tripti logo and wordmark (`public/logo.svg` emblem). Links: Home (`#top`), How It Works (`#how-it-works`), Features (`#features`), Impact (`#impact`). Actions: Sign In (`/sign-in`) and Get Started (`/sign-up`). Mobile menu: a labelled button with `aria-expanded` and `aria-controls`; Escape closes the menu and focus returns to the button.
+2. **Hero:** centred layout. Pill badge "FOOD RESCUE, REIMAGINED". Headline: "Good food deserves / a better destination." (second line in forest-green primary). Supporting line: "Tripti connects food donors, community organisations, and volunteers to rescue surplus food and deliver it where it matters most." CTAs: "Start Rescuing" (primary, `/sign-up`) and "Explore How It Works" (outline, `#how-it-works`). Trust line: "Less waste. More meals. Stronger communities."
 3. **Dashboard preview:** a CSS-built mock product window with a sidebar, four metric cards, a food-listings table with status badges (`POSTED`, `CLAIMED`, `COLLECTED`, `DELIVERED`, each with a text label and icon), and a rescue-activity timeline. Labelled "fictional demo data". Stacks on mobile without horizontal overflow.
 4. **How It Works** (`#how-it-works`): three steps for Donors, Receivers and Volunteers. Label: "THE RESCUE JOURNEY". Heading: "From surplus to someone who needs it."
 5. **Features** (`#features`): four compact panels: Smart Food Discovery, Intelligent Matching, Verified Deliveries, Impact Tracking. Label: "BUILT FOR BETTER RESCUES". Heading: "Everything needed to make every rescue count." Note that these panels describe the intended experience, not features that are live today. Any preview is labelled illustrative/demo and uses synthetic data only.
@@ -355,10 +394,12 @@ Not verified (recorded, not dropped):
 8. **Footer:** minimal. Brand plus "Connecting surplus food with the communities that need it." Navigation links (same anchors as the navbar). Sign In and Get Started. Copyright line. Privacy and Terms links are omitted until those routes exist. No social links unless configured.
 
 ### Routes used
+
 - `/sign-in`, `/sign-up`, `/sign-up?role=donor`, `/sign-up?role=volunteer`
 - In-page anchors: `#how-it-works`, `#features`, `#impact`
 
 ### Visual and interaction
+
 - Colours come only from semantic tokens in `app/globals.css`: warm ivory canvas, deep forest-green primary, leaf-green secondary, harvest-amber accent, and dark natural green/brown text. If a token is missing, add it to `globals.css`; do not add it in component markup.
 - No raw palette classes, no arbitrary hex values and no inline colour literals.
 - Generous whitespace, subtle borders and restrained shadows. Avoid glassmorphism and heavy gradients.
@@ -369,26 +410,31 @@ Not verified (recorded, not dropped):
 - Responsive layouts tested at mobile, tablet and desktop widths.
 
 ### Imagery
+
 - None. The landing page uses no photographs, background images, videos, stock or external visual assets. Visuals are CSS, typography and `lucide-react` icons only.
 - No `next/image` `remotePatterns` are required for this slice.
 
 ### Brand and typography
-- Logo: `public/logo.svg` (Tripthi emblem). Favicon: `public/favicon.svg`.
+
+- Logo: `public/logo.svg` (Tripti emblem). Favicon: `public/favicon.svg`.
 - Typography: Geist and Geist Mono via `next/font/google` in `app/layout.tsx`. This slice adds no fonts.
 
 ### Metadata and SEO
-- Title: "Tripthi — Rescue Food. Share Hope."
-- Description: "Tripthi connects food donors, NGOs, and volunteers to rescue surplus food and deliver it to communities that need it."
+
+- Title: "Tripti — Rescue Food. Share Hope."
+- Description: "Tripti connects food donors, NGOs, and volunteers to rescue surplus food and deliver it to communities that need it."
 - OpenGraph type: `website`. Twitter card: set.
 - `metadataBase` is omitted because no production domain is known. Add it when the domain is set, using `NEXT_PUBLIC_APP_URL`.
 - Icon: `public/favicon.svg`.
 
 ### Safety and data rules
+
 - Static content only. This slice adds no new environment variables.
 - Synthetic metrics and previews are labelled illustrative/demo. No real addresses or personal details.
 - No food-safety certification, tax, legal or regulatory-benefit claims. The platform connects people; it does not certify food.
 
 ### Acceptance criteria
+
 - [ ] Sections 1–8 render in the order above with the specified labels and headings.
 - [ ] Navbar links and footer links scroll smoothly to their anchors, with headings clear of the sticky navbar.
 - [ ] Mobile menu is keyboard-operable, announces its state, and closes on Escape.
@@ -404,16 +450,17 @@ Not verified (recorded, not dropped):
 - [ ] Lint, typecheck and build pass.
 - [ ] No food-safety, tax or legal claims.
 
-
-
 ## User flows
+
 ### Shared
+
 - Landing page → sign up/sign in → role selection → role onboarding → dashboard.
 - If profile onboarding is incomplete, redirect to onboarding.
 - If account is pending verification, show a pending state and restrict sensitive actions.
 - If suspended, block protected actions and show support guidance.
 
 ### Donor onboarding
+
 - Organisation name and type.
 - Contact name/email (minimum necessary).
 - Synthetic/demo location or location chosen from a safe demo dataset.
@@ -421,6 +468,7 @@ Not verified (recorded, not dropped):
 - Verification state: `PENDING`, `VERIFIED`, `REJECTED`.
 
 ### Receiver onboarding
+
 - Organisation name/type.
 - Capacity in meal portions.
 - Food categories/dietary requirements.
@@ -428,6 +476,7 @@ Not verified (recorded, not dropped):
 - Verification state.
 
 ### Volunteer onboarding
+
 - Display name or anonymised demo alias.
 - Preferred rescue radius.
 - Availability preference.
@@ -437,6 +486,7 @@ Not verified (recorded, not dropped):
 - Never expose phone/email on the public map.
 
 ## API routes
+
 - `POST /api/onboarding/role`
 - `GET /api/me`
 - `PATCH /api/profile`
@@ -445,9 +495,10 @@ Not verified (recorded, not dropped):
 - `POST /api/volunteers/profile`
 - `PATCH /api/volunteers/availability`
 - `GET /api/dashboard/summary` (role-filtered)
-All routes require server-side Clerk identity checks. Validate role transitions and ownership.
+  All routes require server-side Clerk identity checks. Validate role transitions and ownership.
 
 ## UI slices
+
 - Public landing and role selection.
 - Sign-in/sign-up pages.
 - Role-specific onboarding forms.
@@ -458,6 +509,7 @@ All routes require server-side Clerk identity checks. Validate role transitions 
 - Profile completion/pending verification states.
 
 ## Acceptance criteria
+
 - [ ] All three user roles can register/sign in.
 - [ ] Role selection persists in Neon.
 - [ ] Each role lands on the correct dashboard.
@@ -468,6 +520,7 @@ All routes require server-side Clerk identity checks. Validate role transitions 
 - [ ] Synthetic demo profile data is clearly marked.
 
 ## Tests
+
 - Role assignment and onboarding tests.
 - Protected-route tests for all roles.
 - Ownership and privilege-escalation tests.
@@ -475,6 +528,7 @@ All routes require server-side Clerk identity checks. Validate role transitions 
 - E2E sign-up/onboarding/dashboard path.
 
 ## Completion handoff
+
 Update progress and `memory.md`; next is Phase 2.
 
 ---
@@ -484,13 +538,16 @@ Update progress and `memory.md`; next is Phase 2.
 **Status:** ✅ Complete
 
 ## Objective
+
 Build the primary food listing workflow and receiver capacity/preferences. The donor flow must take under one minute.
 
 ## Prerequisites
+
 - Phase 1 complete.
 - Donor and receiver profiles available.
 
 ## Skills/docs to install or read
+
 - Drizzle schema and transaction docs.
 - Zod and React Hook Form docs.
 - shadcn/ui form, select, date/time, dialog and toast docs.
@@ -498,12 +555,15 @@ Build the primary food listing workflow and receiver capacity/preferences. The d
 - Optional file upload provider docs only if photos are included; do not add upload infrastructure unless required.
 
 ## Environment variables
+
 - `DATABASE_URL`
 - Clerk variables from Phase 1.
 - Optional image storage variables only if a food-photo feature is approved. MVP may omit images.
 
 ## Data model
+
 `food_listings`:
+
 - `id`, `donor_id`, `organisation_name`
 - `title`, `food_category`, `diet_type`
 - `quantity_portions`, `remaining_portions`, `weight_kg`
@@ -513,17 +573,21 @@ Build the primary food listing workflow and receiver capacity/preferences. The d
 - `status` (`available`, `reserved`, `in_rescue`, `completed`, `cancelled`, `expired`), `created_at`, `updated_at`
 
 `food_requests`:
+
 - `id`, `receiver_id`, `organisation_name`, `title`, `requested_portions`
 - `food_preferences`, `dietary_constraints`
 - `needed_by`, `preferred_radius_km`, `location_name`, `latitude`, `longitude`, `status`
 
 `listing_reservations`:
+
 - `id`, `listing_id`, `receiver_id`, `portions_reserved`, `notes`, `status`, `created_at`, `updated_at`
 
 `receiver_profiles`:
+
 - `id`, `user_id`, `daily_capacity_portions`, `current_capacity_portions`, `dietary_preferences`, `service_radius_km`, `operating_hours`
 
 ## Acceptance criteria
+
 - [x] Donor can publish a valid listing in under 60 seconds in usability test.
 - [x] Food metadata is visible to receivers and volunteers as appropriate.
 - [x] Receiver can set needs/capacity.
@@ -533,6 +597,7 @@ Build the primary food listing workflow and receiver capacity/preferences. The d
 - [x] No food-safety certification claim appears.
 
 ## Tests
+
 - Listing schema validation (`scripts/test-phase2.mjs`: 11 passed).
 - Time-window edge cases (past `pickupBy` rejected, `preparedAt > pickupBy` rejected).
 - Quantity/capacity transaction tests (cannot reserve more than remaining portions or capacity).
@@ -541,6 +606,7 @@ Build the primary food listing workflow and receiver capacity/preferences. The d
 - Full typecheck (`npx tsc --noEmit`) and production build (`npm run build`) pass.
 
 ## Completion handoff
+
 Update `memory.md`; next is Phase 3.
 
 ---
@@ -550,14 +616,17 @@ Update `memory.md`; next is Phase 3.
 **Status:** ✅ Complete
 
 ## Objective
+
 Show anonymised donor, receiver and volunteer markers on a map; shortlist nearby candidates and calculate useful route distance/ETA.
 
 ## Prerequisites
+
 - Phase 2 complete.
 - Google Cloud project and billing configured.
 - Synthetic demo coordinates prepared.
 
 ## Skills/docs to install or read
+
 - Google Maps JavaScript API docs/skill.
 - Google Places API docs/skill if autocomplete is used.
 - Google Routes API docs/skill.
@@ -566,7 +635,9 @@ Show anonymised donor, receiver and volunteer markers on a map; shortlist nearby
 - Google Maps key restriction and billing documentation.
 
 ## Google Cloud setup
+
 Enable only the APIs used:
+
 - Maps JavaScript API.
 - Places API (New) if autocomplete is required.
 - Routes API.
@@ -575,10 +646,12 @@ Enable only the APIs used:
 Set billing budgets/alerts and API quotas. Use exactly one key named `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY`. Restrict it by HTTP referrer to approved local/deployed domains and by API to Maps JavaScript API, Places API and Routes API. Keep Google Maps calls in browser-loaded Maps JavaScript libraries; do not make server-side Google web-service calls. Do not create `GOOGLE_MAPS_SERVER_API_KEY`.
 
 ## Environment variables
+
 - `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` (the only Google Maps key)
 - `DATABASE_URL`
 
 ## Location data model
+
 - Store latitude/longitude and, where available, a PostGIS geography point.
 - Store a location visibility classification and consent/source.
 - Store only approximate or synthetic public map positions.
@@ -586,6 +659,7 @@ Set billing budgets/alerts and API quotas. Use exactly one key named `NEXT_PUBLI
 - For demo, seed synthetic coordinates and anonymised labels.
 
 ## Map features
+
 - Donor markers for active listings.
 - Receiver markers for eligible organisations.
 - Volunteer markers:
@@ -598,6 +672,7 @@ Set billing budgets/alerts and API quotas. Use exactly one key named `NEXT_PUBLI
 - Do not show private contact details or exact personal home addresses.
 
 ## Candidate selection and routes
+
 1. Use PostGIS radius query to shortlist nearby receivers and volunteers.
 2. Apply eligibility constraints in the matching service.
 3. Use the browser Routes library from the Google Maps JavaScript API for actual route distance/ETA on a small visible/selected shortlist.
@@ -606,6 +681,7 @@ Set billing budgets/alerts and API quotas. Use exactly one key named `NEXT_PUBLI
 6. Do not calculate routes for every marker on every render and do not use the deprecated Distance Matrix API for a new build.
 
 ## API routes
+
 - `GET /api/map/markers?bounds=...&roles=...`
 - `GET /api/locations/nearby?lat=...&lng=...&radiusKm=...`
 - `PATCH /api/volunteers/location` (only if location sharing is enabled; coarse/demo location preferred)
@@ -613,6 +689,7 @@ Set billing budgets/alerts and API quotas. Use exactly one key named `NEXT_PUBLI
 Do not accept arbitrary unbounded candidate arrays from the browser. Enforce radius, count and rate limits.
 
 ## Acceptance criteria
+
 - [x] Map renders with synthetic demo data.
 - [x] Markers use role/status semantics and legend.
 - [x] Map has an accessible list alternative.
@@ -622,6 +699,7 @@ Do not accept arbitrary unbounded candidate arrays from the browser. Enforce rad
 - [x] Public demo does not expose real addresses or personal details.
 
 ## Tests
+
 - Spatial radius query tests.
 - Marker filtering tests.
 - Route response validation and provider-error tests.
@@ -629,6 +707,7 @@ Do not accept arbitrary unbounded candidate arrays from the browser. Enforce rad
 - API key restriction review.
 
 ## Completion handoff
+
 Update `memory.md`; next is Phase 4.
 
 ---
@@ -638,13 +717,16 @@ Update `memory.md`; next is Phase 4.
 **Status:** ✅ Complete
 
 ## Objective
+
 Create the core deterministic matching service and a reliable assignment workflow that prevents duplicate claims and records every status transition.
 
 ## Prerequisites
+
 - Phase 3 complete or route service can be stubbed behind a tested interface.
 - Listings, receiver needs and volunteer profiles exist.
 
 ## Skills/docs to install or read
+
 - Drizzle transaction and SQL locking docs.
 - PostgreSQL concurrency/transaction docs.
 - PostGIS docs.
@@ -653,7 +735,9 @@ Create the core deterministic matching service and a reliable assignment workflo
 - Vitest/Jest testing docs.
 
 ## Matching pipeline
+
 ### Hard eligibility filters
+
 - Listing is active and not expired.
 - Receiver is eligible and has remaining capacity.
 - Food type/dietary constraints are compatible.
@@ -664,12 +748,14 @@ Create the core deterministic matching service and a reliable assignment workflo
 - Listing/quantity is not already fully allocated.
 
 ### Ranking
+
 Initial configurable score:
 `0.35 × distanceSuitability + 0.25 × urgencySuitability + 0.20 × reliability + 0.20 × receiverNeedSuitability`
 
 Normalise each dimension to 0–100. Document formula and weights in code/config. Rescue Credits may act only as a small tie-breaker after hard eligibility and core score. Do not allow credits to override time, safety metadata, capacity or need.
 
 ### Assignment flow
+
 1. Listing published.
 2. Find eligible receivers and volunteers.
 3. Compute shortlist and score.
@@ -682,12 +768,14 @@ Normalise each dimension to 0–100. Document formula and weights in code/config
 10. Complete pickup and delivery with proof/OTP.
 
 ## Data model
+
 - `rescue_orders`: listing, receiver, volunteer, allocated quantity, status, deadline and timestamps.
 - `delivery_events`: order ID, event, actor, timestamp, notes/proof.
 - Add idempotency/claim fields as needed.
 - Add database constraints/indexes for active listing/assignment integrity.
 
 ## API routes
+
 - `POST /api/matching/listings/:listingId/run`
 - `GET /api/matching/listings/:listingId/results`
 - `POST /api/rescue-orders`
@@ -699,6 +787,7 @@ Normalise each dimension to 0–100. Document formula and weights in code/config
 - `POST /api/rescue-orders/:id/transition`
 
 ## Acceptance criteria
+
 - [x] Eligible candidates are filtered and ranked.
 - [x] Match result includes explainable reasons (e.g. route ETA, quantity fit, deadline fit).
 - [x] Concurrent claim attempts cannot both succeed.
@@ -708,6 +797,7 @@ Normalise each dimension to 0–100. Document formula and weights in code/config
 - [x] The complete order state is visible to relevant dashboards.
 
 ## Tests
+
 - Matching unit tests for each score dimension (`scripts/test-phase4.mjs`: 25 passed).
 - Hard-filter tests (deadline, capacity, dietary mismatch, volunteer radius).
 - Deadline edge cases and feasibility tests.
@@ -717,6 +807,7 @@ Normalise each dimension to 0–100. Document formula and weights in code/config
 - Typecheck (`npx tsc --noEmit`) and production build (`npm run build`) pass.
 
 ## Completion handoff
+
 Update `memory.md`; next is Phase 5.
 
 ---
@@ -726,13 +817,16 @@ Update `memory.md`; next is Phase 5.
 **Status:** ✅ Complete
 
 ## Objective
+
 Keep volunteer availability, rescue opportunities and order status fresh without a realtime provider, and implement reliable pickup/delivery confirmation.
 
 ## Prerequisites
+
 - Phase 4 assignment lifecycle exists.
 - Synthetic map data available.
 
 ## Skills/docs to install or read
+
 - TanStack Query query keys, polling/refetch, invalidation and stale-time docs.
 - Next.js Route Handler docs.
 - Clerk server auth docs.
@@ -740,10 +834,12 @@ Keep volunteer availability, rescue opportunities and order status fresh without
 - React state and effect cleanup docs.
 
 ## Environment variables
+
 - Clerk variables
 - `DATABASE_URL`
 
 ## Polling and refresh behaviour
+
 - Use TanStack Query for server state.
 - Poll active volunteer availability, active assignments and relevant map markers every 10–15 seconds while the corresponding screen is visible.
 - Pause or reduce polling when the tab is hidden; resume/refetch when it becomes visible.
@@ -753,6 +849,7 @@ Keep volunteer availability, rescue opportunities and order status fresh without
 - Neon remains authoritative. Polling is a near-live MVP strategy, not guaranteed instantaneous push delivery. Do not add Ably, Socket.IO or WebSockets.
 
 ## Availability behaviour
+
 - Available → green marker plus “Available” label.
 - On delivery → blue marker plus “On delivery” label.
 - Unavailable → grey marker plus “Unavailable” label.
@@ -762,6 +859,7 @@ Keep volunteer availability, rescue opportunities and order status fresh without
 - Keep location sharing consent explicit; public/demo maps use synthetic/coarse positions only.
 
 ## OTP verification
+
 - Generate a cryptographically secure, short-lived, one-time code or token.
 - Store only a hash of the OTP.
 - Bind OTP to order + action (pickup or delivery).
@@ -771,12 +869,14 @@ Keep volunteer availability, rescue opportunities and order status fresh without
 - Record actor and timestamp for verification.
 
 ## API routes
+
 - `PATCH /api/volunteers/availability`
 - `POST /api/rescue-orders/:id/pickup/verify`
 - `POST /api/rescue-orders/:id/delivery/verify`
 - `GET /api/rescue-orders/:id`
 
 ## Acceptance criteria
+
 - [x] Availability changes persist in Neon.
 - [x] Active screens poll at the configured interval and stop/reduce polling when hidden.
 - [x] Mutations invalidate/refetch affected query keys immediately.
@@ -787,6 +887,7 @@ Keep volunteer availability, rescue opportunities and order status fresh without
 - [x] Order status and map refresh after successful verification.
 
 ## Tests
+
 - Polling interval/visibility behaviour tests (`scripts/test-phase5.mjs`: 27 passed).
 - Query invalidation tests after mutations.
 - Availability state tests.
@@ -796,6 +897,7 @@ Keep volunteer availability, rescue opportunities and order status fresh without
 - Production build (`npm run build`) and typecheck (`npx tsc --noEmit`) pass.
 
 ## Completion handoff
+
 Update `memory.md`; next is Phase 6.
 
 ---
@@ -805,20 +907,24 @@ Update `memory.md`; next is Phase 6.
 **Status:** ✅ Complete
 
 ## Objective
+
 Automate listing expiry, reminders and notifications so food is not left unclaimed or displayed after its deadline.
 
 ## Prerequisites
+
 - Phase 2 listing model complete.
 - Phase 4 order lifecycle available.
 - Trigger.dev account created and SMTP credentials from a delivery provider configured.
 
 ## Skills/docs to install or read
+
 - Trigger.dev current SDK/tasks/schedules docs or skill.
 - Nodemailer SMTP transport and the selected SMTP provider documentation.
 - Webhook/signature and idempotency docs.
 - Next.js server-only module guidance.
 
 ## Environment variables
+
 - `TRIGGER_SECRET_KEY`
 - `TRIGGER_PROJECT_REF`
 - `SMTP_HOST`
@@ -831,6 +937,7 @@ Automate listing expiry, reminders and notifications so food is not left unclaim
 - Clerk server variables if job actions require identity context (use trusted system context for scheduled tasks).
 
 ## Trigger.dev jobs
+
 - `expire-food-listing`: run at/after `pickup_by`; only expire if still available/unreserved.
 - `remind-volunteer`: remind accepted volunteer before pickup deadline.
 - `notify-donor-status`: send listing claimed/collected/delivered updates.
@@ -841,12 +948,14 @@ Automate listing expiry, reminders and notifications so food is not left unclaim
 All jobs must be idempotent and re-check database state before mutating. Do not rely solely on a scheduled task payload; fetch current record.
 
 ## Notification channels
+
 - In-app notifications stored in Neon.
 - Email through Nodemailer using the configured SMTP provider.
 - In-app notifications are persisted in Neon and surfaced through TanStack Query polling/refetch.
-Avoid building SMS/WhatsApp unless time and approved provider setup justify it.
+  Avoid building SMS/WhatsApp unless time and approved provider setup justify it.
 
 ## API routes
+
 - `GET /api/notifications`
 - `PATCH /api/notifications/:id/read`
 - `POST /api/notifications/mark-all-read`
@@ -854,6 +963,7 @@ Avoid building SMS/WhatsApp unless time and approved provider setup justify it.
 - Trigger.dev task endpoints are managed by its SDK; do not create insecure public task triggers.
 
 ## Acceptance criteria
+
 - [x] Listing expires when deadline passes if not rescued.
 - [x] Reserved/active listings are not incorrectly expired.
 - [x] Reminders send once or are safely idempotent.
@@ -862,6 +972,7 @@ Avoid building SMS/WhatsApp unless time and approved provider setup justify it.
 - [x] Job failures are observable and retry-safe.
 
 ## Tests
+
 - Expiry before/at/after deadline verified in `scripts/test-phase6.mjs`.
 - Transactional email template generation tested with brand tokens and safety disclaimer.
 - Nodemailer client tested with live SMTP and graceful simulation fallback mode.
@@ -869,6 +980,7 @@ Avoid building SMS/WhatsApp unless time and approved provider setup justify it.
 - Full typecheck (`npx tsc --noEmit`) passes with 0 errors.
 
 ## Completion handoff
+
 Update `memory.md`; next is Phase 7.
 
 ---
@@ -878,14 +990,17 @@ Update `memory.md`; next is Phase 7.
 **Status:** ⬜ Not started
 
 ## Objective
+
 Make impact measurable and explainable, recognise volunteer contribution, provide platform operations and demonstrate a plausible revenue model.
 
 ## Prerequisites
+
 - Completed rescue order lifecycle.
 - Delivery confirmation events.
 - Synthetic completed-order seed data.
 
 ## Skills/docs to install or read
+
 - Drizzle aggregation/query docs.
 - Recharts or chosen chart library docs (if charts are needed).
 - Razorpay current checkout and webhook docs/skill if payment demo is implemented.
@@ -893,46 +1008,60 @@ Make impact measurable and explainable, recognise volunteer contribution, provid
 - Financial ledger and webhook idempotency guidance.
 
 ## Environment variables
+
 - `DATABASE_URL`
+- `ADMIN_EMAIL` (default: `vivek338614@gmail.com` automatically seeded/assigned as Platform Admin)
 - `RAZORPAY_KEY_ID`
 - `RAZORPAY_KEY_SECRET`
 - `RAZORPAY_WEBHOOK_SECRET`
 - Clerk variables
 - Optional SMTP variables from Phase 6 if transactional payment emails are implemented.
 
-## Impact metrics
-- Total delivered meal portions.
-- Total verified delivered weight, where available.
-- Estimated food waste avoided only when weight is measured or a documented conversion assumption exists.
-- Estimated emissions avoided only if a credible documented factor is selected. Otherwise omit.
-- Active donors, receivers and volunteers.
-- Rescue completion rate and average time to pickup.
-- Unclaimed/expired food count.
+## Admin dashboard & role authorization
 
-Only delivered and verified quantities count as rescued. Show posted, claimed, collected and delivered separately. Display calculation method, unit, data source, assumption and version. Clearly label estimates.
+- **Designated Platform Admin email:** `vivek338614@gmail.com` is granted Platform Operator / Admin permissions automatically upon authentication.
+- Review donor/receiver organisation verification applications.
+- Review volunteer profiles and reliability records.
+- Inspect active listings and orders with emergency intervention controls.
+- Monitor expired/unclaimed listings and dispatch reminders.
+- Resolve reports/disputes (failed pickups, OTP mismatches, damaged goods).
+- Inspect payment, CSR sponsorship, and volunteer compensation ledgers.
+- Review aggregate operational and impact metrics across all zones.
+- Manage synthetic demo data. Admin operations are strictly audited.
 
-## Rescue Credits
-- Successful verified delivery: configurable base points.
-- On-time completion: optional bonus.
-- Urgent rescue acceptance: optional bonus.
-- Repeated reliable completion: progressive recognition.
-- Cancellation/no-show penalties must be carefully bounded and appealable.
-- Credits are not cash and are not a substitute for compensation.
-- Use an immutable ledger: record point deltas and reasons; do not only overwrite a balance.
-- Use idempotency so duplicate delivery events do not award points twice.
+## Impact metrics & transparent calculation engine
 
-## Admin dashboard
-- Review donor/receiver organisation verification.
-- Review volunteer profiles.
-- Inspect active listings and orders.
-- Monitor expired/unclaimed listings.
-- Resolve reports/disputes.
-- Inspect payment and sponsor ledgers.
-- Review impact and operational metrics.
-- Manage synthetic demo data.
-Admin operations must be audited.
+- Total delivered meal portions (strictly verified deliveries only).
+- Total verified delivered weight in kg ($1\text{ portion} \approx 0.4\text{ kg}$).
+- Estimated food waste avoided in kg.
+- Estimated greenhouse gas emissions averted ($1\text{ kg food waste} \approx 2.5\text{ kg CO}_2\text{e}$ landfill methane equivalent).
+- Public & role-specific metrics with transparent calculation assumptions displayed visibly.
+- Breakdown by food category (cooked meals, bakery, produce, dairy) and rescue trends.
+
+## Rescue Credits immutable ledger
+
+- Dedicated `rescue_credit_ledger` table with immutable transaction logs.
+- Successful verified delivery: `+50` base credits.
+- On-time pickup bonus: `+15` credits.
+- Community recognition tiers: Bronze Scout, Silver Rescuer, Gold Community Guardian.
+- Volunteer points history statement with linked order IDs.
+
+## Business model & commercial monetization
+
+1. **B2B Donor ESG & Waste Optimization Analytics Subscription (SaaS tier):**
+   - High-volume commercial donors (hotels, caterers, corporate cafeterias, supermarket chains) pay a monthly/annual subscription for:
+     - **Overproduction & Kitchen Waste Analytics:** Insights on surplus trends by day of week, meal category, and prep volume to help kitchens reduce food waste at the source (saving 15–20% on procurement).
+     - **Audit-Grade ESG & CSR Reports:** Downloadable, certified reports on food waste diverted and Scope 3 emissions avoided for mandatory corporate sustainability disclosures (BRSR in India, CSR filings).
+     - **Community Impact Attribution:** Branded impact footprint showcasing contributions to local communities without compromising private recipient identities.
+2. **CSR & Corporate Sponsorships (Logistics & Fuel Pool):**
+   - Corporates fund rescue batches (e.g., ₹5,000 to sponsor 500 meals) to satisfy corporate CSR requirements under Indian company regulations, directly subsidizing volunteer transport and cold-storage packing.
+3. **Priority Timed Clearance Fee:**
+   - Commercial event venues (weddings, banquets) with strict 1-hour clearing deadlines can pay a nominal priority dispatch fee to guarantee urgent volunteer pickup within 30 minutes.
+4. **Always Free for Community Receivers & Volunteers:**
+   - NGOs, orphanages, and shelters never pay for food or platform access. Volunteers participate for free and earn non-cash recognition credits + logistics support.
 
 ## Business model demo
+
 - Basic community donation remains free.
 - Donor subscription tiers for advanced analytics and recurring listing management.
 - CSR sponsorships fund rescue campaigns.
@@ -943,7 +1072,9 @@ Admin operations must be audited.
 - Proposed pilot prices are illustrative and must be labelled as such.
 
 ## Payment demo
+
 For hackathon, Razorpay test mode or a clearly labelled simulated ledger is sufficient.
+
 - Create payment order server-side.
 - Verify signature server-side.
 - Process webhooks idempotently.
@@ -952,6 +1083,7 @@ For hackathon, Razorpay test mode or a clearly labelled simulated ledger is suff
 - Do not make actual volunteer payouts unless a compliant payout product/account is configured and tested.
 
 ## Suggested API routes
+
 - `GET /api/impact/summary`
 - `GET /api/impact/history`
 - `GET /api/volunteers/credits`
@@ -963,6 +1095,7 @@ For hackathon, Razorpay test mode or a clearly labelled simulated ledger is suff
 - `POST /api/webhooks/razorpay`
 
 ## Acceptance criteria
+
 - [ ] Impact dashboard uses delivered records only.
 - [ ] Formulas and assumptions are visible.
 - [ ] Credits are ledger-based and idempotent.
@@ -973,6 +1106,7 @@ For hackathon, Razorpay test mode or a clearly labelled simulated ledger is suff
 - [ ] Receivers and volunteers are not charged participation fees.
 
 ## Tests
+
 - Impact aggregation and formula tests.
 - Duplicate credit award tests.
 - Admin authorization tests.
@@ -980,6 +1114,7 @@ For hackathon, Razorpay test mode or a clearly labelled simulated ledger is suff
 - Payment failure/refund state tests if implemented.
 
 ## Completion handoff
+
 Update `memory.md`; next is Phase 8.
 
 ---
@@ -989,15 +1124,18 @@ Update `memory.md`; next is Phase 8.
 **Status:** ⬜ Not started
 
 ## Objective
+
 Deliver a reliable, polished, judge-ready application using synthetic data and a complete end-to-end rescue demonstration.
 
 ## Prerequisites
+
 - Phases 0–7 complete or any omissions explicitly documented.
 - Vercel project created.
 - Production-like environment variables configured.
 - Synthetic seed dataset and demo accounts prepared.
 
 ## Skills/docs to install or read
+
 - Playwright E2E testing skill/docs.
 - Vitest/Jest and Testing Library docs.
 - Next.js deployment docs.
@@ -1009,7 +1147,9 @@ Deliver a reliable, polished, judge-ready application using synthetic data and a
 - Accessibility/WCAG and keyboard testing guidance.
 
 ## Environment variables
+
 All required production values from prior phases, configured in Vercel:
+
 - App URL.
 - Clerk publishable/secret keys.
 - Neon database URL.
@@ -1020,7 +1160,9 @@ All required production values from prior phases, configured in Vercel:
 - Optional monitoring DSN.
 
 ## QA checklist
+
 ### Functional
+
 - [ ] Donor → listing → receiver → volunteer → pickup → delivery → impact works.
 - [ ] All role dashboards show correct data.
 - [ ] Listing deadline and expiry work.
@@ -1030,6 +1172,7 @@ All required production values from prior phases, configured in Vercel:
 - [ ] Payment test flow/webhook works or is clearly marked simulated.
 
 ### Security/privacy
+
 - [ ] Server-side role/ownership checks.
 - [ ] No secrets in client bundle or Git.
 - [ ] Google keys restricted.
@@ -1040,6 +1183,7 @@ All required production values from prior phases, configured in Vercel:
 - [ ] No unsafe food-safety claims.
 
 ### UI/accessibility
+
 - [ ] Responsive on mobile/tablet/desktop.
 - [ ] Keyboard navigation and visible focus.
 - [ ] Form labels and validation messages.
@@ -1050,6 +1194,7 @@ All required production values from prior phases, configured in Vercel:
 - [ ] No raw palette classes or inline colour literals.
 
 ### Deployment
+
 - [ ] Database migrations applied to deployment DB.
 - [ ] Environment variables configured by environment.
 - [ ] Clerk allowed origins/URLs updated.
@@ -1061,6 +1206,7 @@ All required production values from prior phases, configured in Vercel:
 - [ ] Seed demo data is safe and reproducible.
 
 ## Judge demo script
+
 1. Sign in as a restaurant donor.
 2. Post 100 synthetic meal portions with pickup deadline and handling/allergen details.
 3. Show matching results and nearby receiver/volunteer map.
@@ -1077,6 +1223,7 @@ All required production values from prior phases, configured in Vercel:
 Do not stage false real-world outcomes. Clearly label seeded demo records and simulated payment events.
 
 ## Final acceptance criteria
+
 - [ ] Complete end-to-end demo works on deployed URL.
 - [ ] Critical tests pass.
 - [ ] Lint/typecheck pass.
@@ -1090,37 +1237,37 @@ Do not stage false real-world outcomes. Clearly label seeded demo records and si
 
 ## API route index (planned)
 
-| Domain | Method | Route | Purpose |
-|---|---|---|---|
-| Health | GET | `/api/health` | Readiness |
-| Identity | GET | `/api/me` | Current user/profile |
-| Onboarding | POST | `/api/onboarding/role` | Select role |
-| Profiles | PATCH | `/api/profile` | Update own profile |
-| Organisation | POST | `/api/organisations` | Create organisation |
-| Listings | POST | `/api/listings` | Publish surplus |
-| Listings | GET | `/api/listings` | Discover/list |
-| Listings | GET | `/api/listings/:id` | Listing details |
-| Listings | PATCH | `/api/listings/:id` | Edit owned listing |
-| Requests | POST | `/api/food-requests` | Create receiver need |
-| Requests | GET | `/api/food-requests` | List own requests |
-| Map | GET | `/api/map/markers` | Map markers |
-| Location | GET | `/api/locations/nearby` | Nearby candidates |
-| Matching | POST | `/api/matching/listings/:listingId/run` | Run matching |
-| Matching | GET | `/api/matching/listings/:listingId/results` | Read ranked results |
-| Rescue | POST | `/api/rescue-orders` | Create order |
-| Rescue | GET | `/api/rescue-orders` | List permitted orders |
-| Rescue | POST | `/api/rescue-orders/:id/accept` | Accept assignment |
-| Rescue | POST | `/api/rescue-orders/:id/decline` | Decline assignment |
-| Rescue | POST | `/api/rescue-orders/:id/pickup/verify` | Verify pickup |
-| Rescue | POST | `/api/rescue-orders/:id/delivery/verify` | Verify delivery |
-| Volunteer | PATCH | `/api/volunteers/availability` | Change availability |
-| Notifications | GET | `/api/notifications` | List notifications |
-| Notifications | PATCH | `/api/notifications/:id/read` | Mark read |
-| Impact | GET | `/api/impact/summary` | Aggregate impact |
-| Credits | GET | `/api/volunteers/credits` | Credit ledger |
-| Admin | GET | `/api/admin/overview` | Admin metrics |
-| Payments | POST | `/api/payments/checkout` | Create checkout |
-| Webhooks | POST | `/api/webhooks/razorpay` | Verified payment event |
+| Domain        | Method | Route                                       | Purpose                |
+| ------------- | ------ | ------------------------------------------- | ---------------------- |
+| Health        | GET    | `/api/health`                               | Readiness              |
+| Identity      | GET    | `/api/me`                                   | Current user/profile   |
+| Onboarding    | POST   | `/api/onboarding/role`                      | Select role            |
+| Profiles      | PATCH  | `/api/profile`                              | Update own profile     |
+| Organisation  | POST   | `/api/organisations`                        | Create organisation    |
+| Listings      | POST   | `/api/listings`                             | Publish surplus        |
+| Listings      | GET    | `/api/listings`                             | Discover/list          |
+| Listings      | GET    | `/api/listings/:id`                         | Listing details        |
+| Listings      | PATCH  | `/api/listings/:id`                         | Edit owned listing     |
+| Requests      | POST   | `/api/food-requests`                        | Create receiver need   |
+| Requests      | GET    | `/api/food-requests`                        | List own requests      |
+| Map           | GET    | `/api/map/markers`                          | Map markers            |
+| Location      | GET    | `/api/locations/nearby`                     | Nearby candidates      |
+| Matching      | POST   | `/api/matching/listings/:listingId/run`     | Run matching           |
+| Matching      | GET    | `/api/matching/listings/:listingId/results` | Read ranked results    |
+| Rescue        | POST   | `/api/rescue-orders`                        | Create order           |
+| Rescue        | GET    | `/api/rescue-orders`                        | List permitted orders  |
+| Rescue        | POST   | `/api/rescue-orders/:id/accept`             | Accept assignment      |
+| Rescue        | POST   | `/api/rescue-orders/:id/decline`            | Decline assignment     |
+| Rescue        | POST   | `/api/rescue-orders/:id/pickup/verify`      | Verify pickup          |
+| Rescue        | POST   | `/api/rescue-orders/:id/delivery/verify`    | Verify delivery        |
+| Volunteer     | PATCH  | `/api/volunteers/availability`              | Change availability    |
+| Notifications | GET    | `/api/notifications`                        | List notifications     |
+| Notifications | PATCH  | `/api/notifications/:id/read`               | Mark read              |
+| Impact        | GET    | `/api/impact/summary`                       | Aggregate impact       |
+| Credits       | GET    | `/api/volunteers/credits`                   | Credit ledger          |
+| Admin         | GET    | `/api/admin/overview`                       | Admin metrics          |
+| Payments      | POST   | `/api/payments/checkout`                    | Create checkout        |
+| Webhooks      | POST   | `/api/webhooks/razorpay`                    | Verified payment event |
 
 This is a planned contract index. Implement only routes required by the current phase; do not scaffold every endpoint prematurely.
 
